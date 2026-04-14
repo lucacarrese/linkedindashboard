@@ -56,6 +56,7 @@ It will generate an HTML mockup and push it automatically to Figma.
 
 ## Skills Available
 - `anti-ai-writing-style.md` — **Read first.** Rules for writing that sounds human, not AI-generated
+- `coldiq-linkedin-competition/SKILL.md` — Q2 competition rules, scoring strategy, partner tagging, post formats that drive comments
 - `analyze_transcript.md` — How to extract post ideas from a transcript
 - `add_post_to_dashboard.md` — How to save posts to the dashboard
 - `post_structure.md` — Post formats and hook types

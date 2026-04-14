@@ -106,18 +106,41 @@ app.get('/api/skills', (req, res) => {
   const skills = [];
 
   const SKILL_META = {
-    'anti-ai-writing-style.md':{ name: 'Anti-AI Writing Style',     icon: '🚫', category: 'writing',  desc: 'Read this first. Rules for writing that sounds human, not AI-generated.' },
-    'analyze_transcript.md':   { name: 'Analyze Transcript',        icon: '📝', category: 'content',  desc: 'Extract post ideas from webinars, interviews, or meeting transcripts.' },
-    'add_post_to_dashboard.md':{ name: 'Add Post to Dashboard',     icon: '➕', category: 'workflow', desc: 'Save a finalized post to posts.json and the dashboard.' },
-    '_patterns.md':             { name: 'Post Patterns & Structure', icon: '✍️', category: 'writing',  desc: 'Hook formulas, body structure patterns (A/B/C/D), and CTA types.' },
-    'audience_and_tone.md':    { name: 'Audience & Tone Guide',     icon: '🎯', category: 'writing',  desc: 'Who we\'re writing for and how to write for them.' },
+    'anti-ai-writing-style.md':      { name: 'Anti-AI Writing Style',         icon: '🚫', category: 'writing',  desc: 'Read this first. Rules for writing that sounds human, not AI-generated.' },
+    'analyze_transcript.md':         { name: 'Analyze Transcript',            icon: '📝', category: 'content',  desc: 'Extract post ideas from webinars, interviews, or meeting transcripts.' },
+    'add_post_to_dashboard.md':      { name: 'Add Post to Dashboard',         icon: '➕', category: 'workflow', desc: 'Save a finalized post to posts.json and the dashboard.' },
+    '_patterns.md':                  { name: 'Post Patterns & Structure',     icon: '✍️', category: 'writing',  desc: 'Hook formulas, body structure patterns (A/B/C/D), and CTA types.' },
+    'audience_and_tone.md':          { name: 'Audience & Tone Guide',         icon: '🎯', category: 'writing',  desc: 'Who we\'re writing for and how to write for them.' },
+    'coldiq-linkedin-competition':   { name: 'ColdIQ LinkedIn Competition',   icon: '🏆', category: 'strategy', desc: 'Q2 competition rules, scoring strategy, partner tagging guide, and post formats.' },
   };
 
-  // skills/
   if (fs.existsSync(SKILLS_DIR)) {
-    fs.readdirSync(SKILLS_DIR).filter(f => f.endsWith('.md')).forEach(file => {
+    const entries = fs.readdirSync(SKILLS_DIR);
+
+    // Single .md files
+    entries.filter(f => f.endsWith('.md')).forEach(file => {
       const meta = SKILL_META[file] || { name: file.replace('.md',''), icon: '📄', category: 'workflow', desc: '' };
       skills.push({ ...meta, filename: file, content: readMD(path.join(SKILLS_DIR, file)) });
+    });
+
+    // Folder-based skills (contain SKILL.md)
+    entries.filter(f => {
+      const p = path.join(SKILLS_DIR, f);
+      return fs.statSync(p).isDirectory() && fs.existsSync(path.join(p, 'SKILL.md'));
+    }).forEach(folder => {
+      const folderPath = path.join(SKILLS_DIR, folder);
+      const meta = SKILL_META[folder] || { name: folder, icon: '📦', category: 'strategy', desc: '' };
+      let content = readMD(path.join(folderPath, 'SKILL.md')) || '';
+
+      // Append any reference files
+      const refsDir = path.join(folderPath, 'references');
+      if (fs.existsSync(refsDir)) {
+        fs.readdirSync(refsDir).filter(f => f.endsWith('.md')).forEach(ref => {
+          const refContent = readMD(path.join(refsDir, ref));
+          if (refContent) content += `\n\n---\n\n${refContent}`;
+        });
+      }
+      skills.push({ ...meta, filename: folder, content });
     });
   }
 
@@ -153,15 +176,30 @@ app.post('/api/generate', async (req, res) => {
   const antiAI = readMD(path.join(SKILLS_DIR, 'anti-ai-writing-style.md'));
   if (antiAI) skillParts.push(`# WRITING STYLE RULES (read first)\n\n${antiAI}`);
 
-  // 2. Post patterns
+  // 2. Competition skill (folder-based)
+  const compSkillPath = path.join(SKILLS_DIR, 'coldiq-linkedin-competition');
+  const compMain = readMD(path.join(compSkillPath, 'SKILL.md'));
+  if (compMain) {
+    let compContent = compMain;
+    const refsDir = path.join(compSkillPath, 'references');
+    if (fs.existsSync(refsDir)) {
+      fs.readdirSync(refsDir).filter(f => f.endsWith('.md')).forEach(ref => {
+        const rc = readMD(path.join(refsDir, ref));
+        if (rc) compContent += `\n\n---\n\n${rc}`;
+      });
+    }
+    skillParts.push(`# COLDIQ LINKEDIN COMPETITION STRATEGY\n\n${compContent}`);
+  }
+
+  // 3. Post patterns
   const patterns = readMD(path.join(EXAMPLES_DIR, '_patterns.md'));
   if (patterns) skillParts.push(`# POST STRUCTURE PATTERNS\n\n${patterns}`);
 
-  // 3. Audience & tone
+  // 4. Audience & tone
   const tone = readMD(path.join(CONTEXT_DIR, 'audience_and_tone.md'));
   if (tone) skillParts.push(`# AUDIENCE & TONE\n\n${tone}`);
 
-  // 4. Custom strategist skills
+  // 5. Custom strategist skills
   const customSkills = readJSON(STRATEGIST_FILE);
   customSkills.forEach(s => {
     if (s.content) skillParts.push(`# ${s.name.toUpperCase()}\n\n${s.content}`);
