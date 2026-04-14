@@ -163,10 +163,10 @@ app.get('/api/skills', (req, res) => {
 
 // ─── GENERATE POST (Claude API) ─────────────────────────────────
 app.post('/api/generate', async (req, res) => {
-  const { prompt, selectedFileSkills, selectedSkillIds } = req.body;
+  const { prompt, scrapedContent, selectedFileSkills, selectedSkillIds } = req.body;
   const fileSkillsOn = selectedFileSkills || null; // null = all on (default)
   const customSkillsOn = selectedSkillIds || null;
-  if (!prompt) return res.status(400).json({ error: 'No prompt provided' });
+  if (!prompt && !scrapedContent) return res.status(400).json({ error: 'No prompt or scraped content provided' });
   if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your_api_key_here') {
     return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set. Add it to your .env file and Railway environment variables.' });
   }
@@ -246,11 +246,22 @@ OUTPUT FORMAT:
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    // Build user message: combine scraped content + prompt
+    let userMessage = '';
+    if (scrapedContent) {
+      userMessage += `SCRAPED CONTENT FOR INSPIRATION:\n"""\n${scrapedContent}\n"""\n\nUse the above as raw inspiration only — do NOT copy it. Extract the core insight or angle, then rewrite it completely in Luca's voice following the system rules.\n\n`;
+    }
+    if (prompt) {
+      userMessage += prompt;
+    } else {
+      userMessage += 'Write a LinkedIn post inspired by the scraped content above.';
+    }
+
     const stream = client.messages.stream({
       model: 'claude-opus-4-6',
       max_tokens: 1024,
       system: systemPrompt,
-      messages: [{ role: 'user', content: prompt }]
+      messages: [{ role: 'user', content: userMessage }]
     });
 
     stream.on('text', (text) => {

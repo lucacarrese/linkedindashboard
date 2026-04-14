@@ -666,9 +666,33 @@
 
           <!-- Right: write + output -->
           <div class="strat-write-col">
+            <!-- Scraped Content -->
+            <div class="strat-input-card" id="scrape-card">
+              <div class="strat-scrape-header" onclick="toggleScrapeBox()">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:15px">📎</span>
+                  <div>
+                    <div class="strat-input-label" style="padding:0;margin:0">Scraped Content</div>
+                    <div style="font-size:11px;color:#bbb;margin-top:1px">Paste content for inspiration — posts, articles, threads</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span id="scrape-badge" style="display:none;font-size:10px;font-weight:700;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;padding:2px 7px;border-radius:10px">Content added</span>
+                  <span id="scrape-toggle-icon" style="font-size:12px;color:#bbb;transition:transform 0.2s">▼</span>
+                </div>
+              </div>
+              <div id="scrape-box" style="display:none;border-top:1px solid #f0f0f0">
+                <textarea class="strat-prompt-input" id="strat-scraped" placeholder="Paste anything here — a LinkedIn post you saw, an article, a tweet thread, a competitor post...&#10;&#10;Claude will use it as raw inspiration to write something original in Luca's voice." rows="7" oninput="updateScrapeBadge()"></textarea>
+                <div style="padding:8px 16px 10px;display:flex;justify-content:flex-end">
+                  <button onclick="clearScrapeBox()" style="font-size:11px;color:#aaa;background:none;border:none;cursor:pointer">Clear</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Prompt -->
             <div class="strat-input-card">
-              <div class="strat-input-label">What should I write about?</div>
-              <textarea class="strat-prompt-input" id="strat-prompt" placeholder="Paste a transcript, describe a topic, share an angle, or drop a URL...&#10;&#10;Example: 'Write a post about how we built a 57-second outbound campaign using Claude Code. The hook should be around the time (57 seconds). Step-by-step format.'"  rows="6"></textarea>
+              <div class="strat-input-label">Your angle <span style="font-size:11px;font-weight:400;color:#bbb">(optional if scraped content is added)</span></div>
+              <textarea class="strat-prompt-input" id="strat-prompt" placeholder="Describe what you want — topic, hook, format, angle...&#10;&#10;Example: 'Write a post about how we built a 57-second outbound campaign. Step-by-step format, hook around the time.'" rows="4"></textarea>
               <div class="strat-input-footer">
                 <span class="strat-model-label">claude-opus-4-6</span>
                 <button class="btn-generate" id="generate-btn" onclick="generatePost()">Generate Post →</button>
@@ -1633,9 +1657,28 @@ function renderStratActiveSkills() {
   }).join('');
 }
 
+function toggleScrapeBox() {
+  const box = document.getElementById('scrape-box');
+  const icon = document.getElementById('scrape-toggle-icon');
+  const open = box.style.display !== 'none';
+  box.style.display = open ? 'none' : 'block';
+  icon.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+function updateScrapeBadge() {
+  const val = document.getElementById('strat-scraped').value.trim();
+  document.getElementById('scrape-badge').style.display = val ? 'inline-block' : 'none';
+}
+
+function clearScrapeBox() {
+  document.getElementById('strat-scraped').value = '';
+  updateScrapeBadge();
+}
+
 async function generatePost() {
   const prompt = document.getElementById('strat-prompt').value.trim();
-  if (!prompt) { showToast('Add a prompt first'); return; }
+  const scraped = document.getElementById('strat-scraped').value.trim();
+  if (!prompt && !scraped) { showToast('Add a prompt or scraped content first'); return; }
   if (isGenerating) return;
 
   isGenerating = true;
@@ -1656,7 +1699,7 @@ async function generatePost() {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, selectedFileSkills, selectedSkillIds })
+      body: JSON.stringify({ prompt, scrapedContent: scraped, selectedFileSkills, selectedSkillIds })
     });
 
     if (!res.ok) {
