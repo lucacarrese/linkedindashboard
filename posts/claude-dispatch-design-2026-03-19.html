@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Claude Dispatch Design</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1080px;
+    height: 1350px;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  .canvas {
+    width: 1080px;
+    height: 1350px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 75% 5%,  rgba(230,160,175,0.85) 0%, transparent 35%),
+      radial-gradient(ellipse at 50% 2%,  rgba(202, 83,102,0.95) 0%, transparent 52%),
+      radial-gradient(ellipse at 10% 55%, rgba( 91, 19, 53,0.75) 0%, transparent 38%),
+      linear-gradient(158deg, #b83658 0%, #8b2840 28%, #641830 55%, #442038 75%, #2e1830 100%);
+  }
+
+  .glow-top {
+    position: absolute;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(230,160,175,0.5) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Grain texture */
+  .canvas::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Grid lines */
+  .canvas::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,80,100,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,80,100,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* All content above overlays */
+  .content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Headline */
+  .headline {
+    position: absolute;
+    top: 52px;
+    left: 0; right: 0;
+    text-align: center;
+    padding: 0 64px;
+  }
+
+  .headline h1 {
+    font-size: 66px;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+  }
+
+  .headline h1 .light {
+    font-weight: 300;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .headline .subhead {
+    display: inline-block;
+    margin-top: 18px;
+    background: rgba(20,6,12,0.25);
+    border: 1px solid rgba(20,6,12,0.15);
+    border-radius: 50px;
+    padding: 10px 28px;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.88);
+    letter-spacing: 0.005em;
+  }
+
+  /* Flow pills */
+  .flow-nav {
+    position: absolute;
+    top: 248px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    gap: 0;
+  }
+
+  .flow-pill {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 50px;
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1A0810;
+  }
+
+  .flow-pill.active {
+    background: white;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  .flow-arrow {
+    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    margin: 0 6px;
+    font-weight: 400;
+  }
+
+  /* BG watermark */
+  .bg-text {
+    position: absolute;
+    top: 230px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 200px;
+    font-weight: 900;
+    color: rgba(15,4,8,0.08);
+    white-space: nowrap;
+    letter-spacing: -0.04em;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Cards */
+  .cards {
+    position: absolute;
+    top: 322px;
+    bottom: 56px;
+    left: 36px;
+    right: 36px;
+    display: flex;
+    gap: 16px;
+  }
+
+  .card {
+    flex: 1;
+    background: rgba(90, 18, 32, 0.52);
+    border: 1px solid rgba(220, 120, 140, 0.2);
+    border-radius: 22px;
+    padding: 22px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(6px);
+  }
+
+  .card-label {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(15, 4, 8, 0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    width: fit-content;
+  }
+
+  .toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex: 1;
+  }
+
+  .toggle-item:last-child { border-bottom: none; }
+
+  /* Toggle switch */
+  .toggle {
+    flex-shrink: 0;
+    width: 54px;
+    height: 30px;
+    border-radius: 50px;
+    background: #1C080F;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .toggle-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+    right: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  /* OFF state — thumb left, grey thumb */
+  .toggle.off .toggle-thumb {
+    right: auto;
+    left: 3px;
+    background: rgba(120,80,90,0.7);
+  }
+
+  /* GREEN state */
+  .toggle.green {
+    background: #0F3D1A;
+    border-color: rgba(60,200,100,0.2);
+  }
+
+  .item-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.3;
+  }
+
+  .sub {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 400;
+    margin-top: 2px;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .sub.bad  { color: rgba(255,110,110,0.85); }
+  .sub.good { color: rgba(60,210,100,0.9);   }
+
+  /* Footer */
+  .footer {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 4, 8, 0.7);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50px;
+    padding: 10px 36px;
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    white-space: nowrap;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="content">
+    <div class="glow-top"></div>
+    <div class="bg-text">DISPATCH</div>
+
+    <div class="headline">
+      <h1><strong>Claude Dispatch</strong> <span class="light">just shipped.</span></h1>
+      <p class="subhead">Run your AI agent from your phone — safely, cheaply, natively.</p>
+    </div>
+
+    <div class="flow-nav">
+      <div class="flow-pill active">📱 Your Phone</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-pill">⚡ Dispatch</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-pill">💻 Desktop Runs</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-pill">📲 Results Back</div>
+    </div>
+
+    <div class="cards">
+
+      <!-- Card 1: How It Works -->
+      <div class="card">
+        <div class="card-label">How It Works</div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">📱</div></div>
+          <div class="item-text">Send a message<span class="sub">from your phone</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">⚡</div></div>
+          <div class="item-text">Dispatch bridges<span class="sub">phone ↔ desktop</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">🤖</div></div>
+          <div class="item-text">Skill runs locally<span class="sub">on your computer</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">✅</div></div>
+          <div class="item-text">Results delivered<span class="sub">back to your phone</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle green"><div class="toggle-thumb">🔒</div></div>
+          <div class="item-text">Explicit permissions<span class="sub">approve every tool access</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">📂</div></div>
+          <div class="item-text">Claude Code skills<span class="sub">copy folder → Co-work</span></div>
+        </div>
+      </div>
+
+      <!-- Card 2: vs OpenClaw -->
+      <div class="card">
+        <div class="card-label">vs OpenClaw</div>
+        <div class="toggle-item">
+          <div class="toggle off"><div class="toggle-thumb">🔑</div></div>
+          <div class="item-text">API key leaks<span class="sub bad">tens of thousands exposed</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle green"><div class="toggle-thumb">🛡️</div></div>
+          <div class="item-text">Sandboxed + local<span class="sub good">Anthropic-built permissions</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle off"><div class="toggle-thumb">💸</div></div>
+          <div class="item-text">Pay per token<span class="sub bad">$100 in first few days</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle green"><div class="toggle-thumb">📋</div></div>
+          <div class="item-text">Flat subscription<span class="sub good">4–8x cheaper</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle off"><div class="toggle-thumb">⚠️</div></div>
+          <div class="item-text">Third-party risk<span class="sub bad">random open-source project</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle green"><div class="toggle-thumb">✦</div></div>
+          <div class="item-text">Built by Anthropic<span class="sub good">same team, same model</span></div>
+        </div>
+      </div>
+
+      <!-- Card 3: Run From Phone -->
+      <div class="card">
+        <div class="card-label">Run From Phone</div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">🔍</div></div>
+          <div class="item-text">Scrape 200 leads<span class="sub">while waiting for a train</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">📧</div></div>
+          <div class="item-text">Inbox cleaner<span class="sub">auto-mark spam + pre-draft replies</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">🖼️</div></div>
+          <div class="item-text">Thumbnails<span class="sub">generate + face swap skill</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">⚙️</div></div>
+          <div class="item-text">Any Claude Code skill<span class="sub">copy folder to Co-work</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle"><div class="toggle-thumb">🔄</div></div>
+          <div class="item-text">Run in parallel<span class="sub">multiple skills at once</span></div>
+        </div>
+        <div class="toggle-item">
+          <div class="toggle green"><div class="toggle-thumb">⏱️</div></div>
+          <div class="item-text">Setup: 5 minutes<span class="sub good">Max plans now · Pro soon</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">COLDIQ</div>
+
+  </div>
+</div>
+</body>
+</html>

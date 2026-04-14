@@ -268,9 +268,14 @@
     .skill-info { flex: 1; }
     .skill-name { font-size: 15px; font-weight: 700; color: #1d1d1d; margin-bottom: 4px; }
     .skill-cat { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px; letter-spacing: 0.3px; text-transform: uppercase; }
-    .cat-content  { background: #dbeafe; color: #1d4ed8; }
-    .cat-workflow { background: #dcfce7; color: #166534; }
-    .cat-writing  { background: #fef3e8; color: #c05621; }
+    .cat-content    { background: #dbeafe; color: #1d4ed8; }
+    .cat-workflow   { background: #dcfce7; color: #166534; }
+    .cat-writing    { background: #fef3e8; color: #c05621; }
+    .cat-strategy   { background: #f3e8ff; color: #7e22ce; }
+    .cat-hook       { background: #fce7f3; color: #be185d; }
+    .cat-engagement { background: #fff7ed; color: #c2410c; }
+    .cat-growth     { background: #ecfdf5; color: #047857; }
+    .cat-other      { background: #f3f4f6; color: #374151; }
     .skill-desc { font-size: 12px; color: #888; line-height: 1.5; }
     .skill-card-footer { display: flex; justify-content: flex-end; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f5f5f5; }
     .btn-view-skill { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; border: 1px solid #0A66C2; background: transparent; color: #0A66C2; cursor: pointer; transition: all 0.12s; }
@@ -460,6 +465,9 @@
       <div class="nav-item" data-section="skills" onclick="switchSection('skills',this)">
         <span class="nav-icon">⚡</span><span>Skills</span>
       </div>
+      <div class="nav-item" data-section="strategist" onclick="switchSection('strategist',this)">
+        <span class="nav-icon">🧠</span><span>LinkedIn Strategist</span>
+      </div>
       <div class="nav-item" data-section="progress" onclick="switchSection('progress',this)">
         <span class="nav-icon">📈</span><span>Progress</span>
       </div>
@@ -573,6 +581,19 @@
       </div>
       <div class="section-body">
         <div class="skills-grid" id="skills-grid"></div>
+      </div>
+    </section>
+
+    <!-- LINKEDIN STRATEGIST -->
+    <section class="section" id="section-strategist">
+      <div class="topbar">
+        <div class="topbar-title">LinkedIn Strategist</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="openStratModal()">+ Add Skill</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="skills-grid" id="strategist-grid"></div>
       </div>
     </section>
 
@@ -708,6 +729,53 @@
   </div>
 </div>
 
+<!-- ─── STRATEGIST ADD/EDIT MODAL ────────────────────────── -->
+<div class="modal-overlay" id="strat-modal" onclick="closeStratModal(event)">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <input type="text" class="modal-title-input" id="strat-name" placeholder="Skill name...">
+        <button class="modal-close" onclick="closeStratModal()">×</button>
+      </div>
+      <div class="modal-meta-row">
+        <div class="meta-field">
+          <div class="meta-label">Category</div>
+          <select class="meta-input" id="strat-category">
+            <option value="strategy">Strategy</option>
+            <option value="content">Content</option>
+            <option value="hook">Hook</option>
+            <option value="engagement">Engagement</option>
+            <option value="growth">Growth</option>
+            <option value="writing">Writing</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="meta-field">
+          <div class="meta-label">Icon (emoji)</div>
+          <input type="text" class="meta-input" id="strat-icon" placeholder="🧠" style="width:70px">
+        </div>
+        <div class="meta-field" style="flex:1">
+          <div class="meta-label">Description</div>
+          <input type="text" class="meta-input" id="strat-desc" placeholder="One-line description..." style="width:100%">
+        </div>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="design-hint">Write the full skill content — prompts, frameworks, rules, examples.</div>
+      <textarea class="design-textarea" id="strat-content" placeholder="Write the skill here..." style="min-height:320px"></textarea>
+    </div>
+    <div class="modal-footer">
+      <div class="footer-left">
+        <button class="btn btn-danger" id="strat-delete-btn" onclick="deleteStratSkill()" style="display:none">Delete</button>
+      </div>
+      <div class="footer-right">
+        <button class="btn btn-secondary" onclick="closeStratModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStratSkill()">Save Skill</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ─── SKILL DRAWER ──────────────────────────────────────── -->
 <div class="skill-drawer-overlay" id="skill-drawer-overlay" onclick="closeSkillDrawer(event)">
   <div class="skill-drawer" id="skill-drawer">
@@ -737,6 +805,8 @@ let POSTS = [];
 let IDEAS = [];
 let SKILLS = [];
 let PROGRESS = [];
+let STRATEGIST = [];
+let activeStratId = null;
 let currentDate = new Date();
 let calFilter = 'all';
 let postsFilter = 'all';
@@ -752,13 +822,14 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 // ─── INIT ────────────────────────────────────────────────────────
 async function init() {
   try {
-    const [postsRes, ideasRes, progressRes, skillsRes] = await Promise.all([
-      fetch('/api/posts'), fetch('/api/ideas'), fetch('/api/progress'), fetch('/api/skills')
+    const [postsRes, ideasRes, progressRes, skillsRes, stratRes] = await Promise.all([
+      fetch('/api/posts'), fetch('/api/ideas'), fetch('/api/progress'), fetch('/api/skills'), fetch('/api/strategist')
     ]);
-    POSTS    = await postsRes.json();
-    IDEAS    = await ideasRes.json();
-    PROGRESS = await progressRes.json();
-    SKILLS   = await skillsRes.json();
+    POSTS      = await postsRes.json();
+    IDEAS      = await ideasRes.json();
+    PROGRESS   = await progressRes.json();
+    SKILLS     = await skillsRes.json();
+    STRATEGIST = await stratRes.json();
     setSidebarStatus('● Connected', true);
   } catch(e) {
     setSidebarStatus('● Offline', false);
@@ -788,11 +859,12 @@ function switchSection(name, el) {
   el.classList.add('active');
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.getElementById('section-' + name).classList.add('active');
-  if (name === 'posts')    renderPostsSection();
-  if (name === 'ideas')    renderIdeasGrid();
-  if (name === 'skills')   renderSkillsGrid();
-  if (name === 'progress') renderProgress();
-  if (name === 'calendar') { renderCalendar(); renderPostList(); }
+  if (name === 'posts')      renderPostsSection();
+  if (name === 'ideas')      renderIdeasGrid();
+  if (name === 'skills')     renderSkillsGrid();
+  if (name === 'strategist') renderStrategistGrid();
+  if (name === 'progress')   renderProgress();
+  if (name === 'calendar')   { renderCalendar(); renderPostList(); }
 }
 
 // ─── API HELPERS ─────────────────────────────────────────────────
@@ -1398,6 +1470,96 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── LINKEDIN STRATEGIST ─────────────────────────────────────────
+function renderStrategistGrid() {
+  const grid = document.getElementById('strategist-grid');
+  if (!STRATEGIST.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🧠</div><div class="empty-title">No skills yet</div><div class="empty-sub">Click "+ Add Skill" to build your LinkedIn strategy playbook.</div></div>`;
+    return;
+  }
+  grid.innerHTML = STRATEGIST.map((s, i) => `
+    <div class="skill-card" onclick="openStratDrawer(${i})">
+      <div class="skill-card-top">
+        <div class="skill-icon">${esc(s.icon || '🧠')}</div>
+        <div class="skill-info">
+          <div class="skill-name">${esc(s.name)}</div>
+          <span class="skill-cat cat-${esc(s.category || 'other')}">${esc(s.category || 'other')}</span>
+          <div class="skill-desc">${esc(s.desc || '')}</div>
+        </div>
+      </div>
+      <div class="skill-card-footer" style="justify-content:space-between">
+        <button class="btn btn-secondary" style="font-size:11px;padding:4px 12px;border-radius:20px" onclick="event.stopPropagation();openStratModal('${s.id}')">Edit</button>
+        <button class="btn-view-skill" onclick="event.stopPropagation();openStratDrawer(${i})">View →</button>
+      </div>
+    </div>`).join('');
+}
+
+function openStratModal(id) {
+  activeStratId = id || null;
+  const skill = id ? STRATEGIST.find(s => s.id === id) : null;
+  document.getElementById('strat-name').value    = skill ? skill.name : '';
+  document.getElementById('strat-category').value = skill ? skill.category : 'strategy';
+  document.getElementById('strat-icon').value    = skill ? skill.icon : '🧠';
+  document.getElementById('strat-desc').value    = skill ? skill.desc : '';
+  document.getElementById('strat-content').value = skill ? skill.content : '';
+  document.getElementById('strat-delete-btn').style.display = skill ? 'inline-block' : 'none';
+  document.getElementById('strat-modal').classList.add('open');
+  setTimeout(() => document.getElementById('strat-name').focus(), 80);
+}
+
+function closeStratModal(e) {
+  if (e && e.target !== document.getElementById('strat-modal')) return;
+  document.getElementById('strat-modal').classList.remove('open');
+  activeStratId = null;
+}
+
+async function saveStratSkill() {
+  const name = document.getElementById('strat-name').value.trim();
+  if (!name) { showToast('Add a skill name'); return; }
+  const skill = {
+    id: activeStratId || 'strat_' + Date.now(),
+    name,
+    category: document.getElementById('strat-category').value,
+    icon: document.getElementById('strat-icon').value.trim() || '🧠',
+    desc: document.getElementById('strat-desc').value.trim(),
+    content: document.getElementById('strat-content').value,
+    updatedAt: new Date().toISOString().slice(0,10)
+  };
+  if (activeStratId) {
+    const idx = STRATEGIST.findIndex(s => s.id === activeStratId);
+    STRATEGIST[idx] = skill;
+    await api('PUT', '/api/strategist/' + activeStratId, skill);
+  } else {
+    STRATEGIST.unshift(skill);
+    await api('POST', '/api/strategist', skill);
+  }
+  document.getElementById('strat-modal').classList.remove('open');
+  activeStratId = null;
+  renderStrategistGrid();
+  showToast(activeStratId ? 'Skill updated' : 'Skill saved');
+}
+
+async function deleteStratSkill() {
+  if (!activeStratId) return;
+  STRATEGIST = STRATEGIST.filter(s => s.id !== activeStratId);
+  await api('DELETE', '/api/strategist/' + activeStratId);
+  document.getElementById('strat-modal').classList.remove('open');
+  activeStratId = null;
+  renderStrategistGrid();
+  showToast('Skill deleted');
+}
+
+function openStratDrawer(idx) {
+  const s = STRATEGIST[idx];
+  if (!s) return;
+  activeSkill = s;
+  document.getElementById('sd-icon').textContent = s.icon || '🧠';
+  document.getElementById('sd-name').textContent = s.name;
+  document.getElementById('sd-desc').textContent = s.desc || '';
+  document.getElementById('sd-content').innerHTML = renderMarkdown(s.content || '');
+  document.getElementById('skill-drawer-overlay').classList.add('open');
 }
 
 // ─── START ────────────────────────────────────────────────────────

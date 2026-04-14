@@ -12,6 +12,7 @@ const PROGRESS_FILE = path.join(DATA_DIR, 'progress.json');
 const SKILLS_DIR = path.join(__dirname, 'skills');
 const EXAMPLES_DIR = path.join(__dirname, 'examples');
 const CONTEXT_DIR = path.join(__dirname, 'context');
+const STRATEGIST_FILE = path.join(DATA_DIR, 'strategist.json');
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
@@ -133,6 +134,32 @@ app.get('/api/skills', (req, res) => {
   }
 
   res.json(skills);
+});
+
+// ─── LINKEDIN STRATEGIST ────────────────────────────────────────
+app.get('/api/strategist', (req, res) => res.json(readJSON(STRATEGIST_FILE)));
+
+app.post('/api/strategist', (req, res) => {
+  const skills = readJSON(STRATEGIST_FILE);
+  skills.push(req.body);
+  writeJSON(STRATEGIST_FILE, skills);
+  res.json({ ok: true });
+});
+
+app.put('/api/strategist/:id', (req, res) => {
+  const skills = readJSON(STRATEGIST_FILE);
+  const idx = skills.findIndex(s => s.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  skills[idx] = req.body;
+  writeJSON(STRATEGIST_FILE, skills);
+  res.json({ ok: true });
+});
+
+app.delete('/api/strategist/:id', (req, res) => {
+  let skills = readJSON(STRATEGIST_FILE);
+  skills = skills.filter(s => s.id !== req.params.id);
+  writeJSON(STRATEGIST_FILE, skills);
+  res.json({ ok: true });
 });
 
 // ─── START ──────────────────────────────────────────────────────

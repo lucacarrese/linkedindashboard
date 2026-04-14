@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkedIn Post Calendar</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f3f2ef;
+      color: #1d1d1d;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #0A66C2;
+      color: white;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    header svg { width: 28px; height: 28px; fill: white; }
+    header h1 { font-size: 20px; font-weight: 600; }
+    .header-actions { display: flex; gap: 10px; }
+    .btn-header {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 2px solid rgba(255,255,255,0.6);
+      background: transparent;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-header:hover { background: rgba(255,255,255,0.15); border-color: white; }
+    .btn-header.primary { background: white; color: #0A66C2; border-color: white; }
+    .btn-header.primary:hover { background: #e8f0fb; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .stats { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+    .stat-card {
+      background: white;
+      border-radius: 10px;
+      padding: 14px 20px;
+      flex: 1;
+      min-width: 120px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      text-align: center;
+      border-top: 3px solid transparent;
+    }
+    .stat-card .number { font-size: 26px; font-weight: 700; margin-bottom: 2px; }
+    .stat-card .label { font-size: 12px; color: #666; }
+    .stat-draft { border-color: #aaa; } .stat-draft .number { color: #888; }
+    .stat-ready { border-color: #0A66C2; } .stat-ready .number { color: #0A66C2; }
+    .stat-missing { border-color: #E67E22; } .stat-missing .number { color: #E67E22; }
+    .stat-done { border-color: #27AE60; } .stat-done .number { color: #27AE60; }
+    .stat-posted { border-color: #057642; } .stat-posted .number { color: #057642; }
+
+    .layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+
+    .card { background: white; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+
+    /* Calendar */
+    .calendar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px; border-bottom: 1px solid #e8e8e8;
+    }
+    .calendar-header h2 { font-size: 17px; font-weight: 600; }
+    .nav-btn {
+      background: none; border: 1px solid #ddd; border-radius: 6px;
+      width: 32px; height: 32px; cursor: pointer; font-size: 16px;
+      color: #444; display: flex; align-items: center; justify-content: center;
+    }
+    .nav-btn:hover { background: #f0f0f0; }
+    .calendar-grid { padding: 16px; }
+    .day-labels { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 8px; }
+    .day-label { text-align: center; font-size: 12px; font-weight: 600; color: #888; padding: 4px 0; text-transform: uppercase; }
+    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .day-cell {
+      aspect-ratio: 1; border-radius: 8px; display: flex; flex-direction: column;
+      align-items: center; padding: 6px 4px 4px; cursor: default;
+      transition: background 0.15s; min-height: 52px;
+    }
+    .day-cell.has-post { cursor: pointer; }
+    .day-cell.has-post:hover { background: #f0f7ff; }
+    .day-cell.today .day-num {
+      background: #0A66C2; color: white; border-radius: 50%;
+      width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    }
+    .day-cell.other-month .day-num { color: #ccc; }
+    .day-num { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 3px; }
+    .post-dots { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; }
+    .post-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-draft { background: #aaa; }
+    .dot-ready { background: #0A66C2; }
+    .dot-missing-visual { background: #E67E22; }
+    .dot-done { background: #27AE60; }
+    .dot-posted { background: #057642; }
+
+    /* Post List */
+    .list-header {
+      padding: 16px 16px 12px; border-bottom: 1px solid #e8e8e8;
+    }
+    .list-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .list-header h2 { font-size: 17px; font-weight: 600; }
+    .filter-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+    .filter-tab {
+      padding: 4px 10px; border-radius: 20px; border: 1px solid #ddd;
+      background: white; font-size: 11px; cursor: pointer; color: #555; transition: all 0.15s;
+    }
+    .filter-tab.active { background: #0A66C2; color: white; border-color: #0A66C2; }
+    .filter-tab:hover:not(.active) { background: #f0f0f0; }
+
+    .post-list { padding: 10px; max-height: 600px; overflow-y: auto; }
+    .post-item {
+      border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer;
+      border: 1px solid #eee; transition: all 0.15s;
+    }
+    .post-item:hover { border-color: #0A66C2; box-shadow: 0 2px 8px rgba(10,102,194,0.1); }
+    .post-item.selected { border-color: #0A66C2; background: #f0f7ff; }
+    .post-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+    .post-item-title { font-size: 13px; font-weight: 600; color: #1d1d1d; line-height: 1.3; }
+
+    /* Status badges */
+    .status-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; white-space: nowrap; flex-shrink: 0; }
+    .badge-draft { background: #f0f0f0; color: #666; }
+    .badge-ready { background: #e8f0fb; color: #0A66C2; }
+    .badge-missing-visual { background: #fef3e8; color: #E67E22; }
+    .badge-done { background: #eafaf1; color: #27AE60; }
+    .badge-posted { background: #e8f5ee; color: #057642; }
+
+    .post-item-meta { font-size: 12px; color: #888; display: flex; gap: 8px; flex-wrap: wrap; }
+    .post-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+    .tag { font-size: 11px; background: #f3f2ef; color: #555; padding: 2px 7px; border-radius: 20px; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 100;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: 14px; max-width: 680px; width: 100%;
+      max-height: 90vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    /* Modal Header */
+    .modal-header { padding: 18px 20px 14px; border-bottom: 1px solid #eee; }
+    .modal-title-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+    .modal-title-input {
+      flex: 1; font-size: 17px; font-weight: 700; border: none; outline: none;
+      background: transparent; color: #1d1d1d; line-height: 1.3;
+      border-bottom: 2px solid transparent; padding-bottom: 2px;
+      transition: border-color 0.15s;
+    }
+    .modal-title-input:focus { border-bottom-color: #0A66C2; }
+    .modal-close {
+      background: none; border: none; font-size: 22px; cursor: pointer;
+      color: #888; flex-shrink: 0; line-height: 1; padding: 2px;
+    }
+    .modal-close:hover { color: #333; }
+
+    .modal-meta-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+    .meta-field { display: flex; flex-direction: column; gap: 3px; }
+    .meta-label { font-size: 10px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .meta-input {
+      font-size: 13px; border: 1px solid #ddd; border-radius: 6px;
+      padding: 5px 8px; color: #333; background: white; outline: none;
+      transition: border-color 0.15s;
+    }
+    .meta-input:focus { border-color: #0A66C2; }
+
+    .status-select {
+      font-size: 12px; font-weight: 600; border: 1px solid #ddd;
+      border-radius: 20px; padding: 4px 10px; cursor: pointer; outline: none;
+      transition: all 0.15s; appearance: none; padding-right: 24px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .status-select.s-draft { background-color: #f0f0f0; color: #666; border-color: #ddd; }
+    .status-select.s-ready { background-color: #e8f0fb; color: #0A66C2; border-color: #b8d0f5; }
+    .status-select.s-missing-visual { background-color: #fef3e8; color: #E67E22; border-color: #f5d0a0; }
+    .status-select.s-done { background-color: #eafaf1; color: #27AE60; border-color: #a8e6c0; }
+    .status-select.s-posted { background-color: #e8f5ee; color: #057642; border-color: #a0d8b8; }
+
+    /* Tags Editor */
+    .tags-editor { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 10px 20px; border-bottom: 1px solid #eee; }
+    .tag-chip {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; background: #f3f2ef; color: #444;
+      padding: 3px 8px 3px 10px; border-radius: 20px;
+    }
+    .tag-remove {
+      background: none; border: none; color: #999; cursor: pointer;
+      font-size: 14px; line-height: 1; padding: 0;
+    }
+    .tag-remove:hover { color: #e74c3c; }
+    .tag-add-input {
+      font-size: 12px; border: 1px dashed #ccc; border-radius: 20px;
+      padding: 3px 10px; outline: none; width: 120px; color: #555;
+      transition: border-color 0.15s;
+    }
+    .tag-add-input:focus { border-color: #0A66C2; border-style: solid; }
+    .tag-add-input::placeholder { color: #bbb; }
+
+    /* Modal Body */
+    .modal-body {
+      padding: 16px 20px; overflow-y: auto; flex: 1;
+    }
+    .body-textarea {
+      width: 100%; min-height: 260px; font-size: 14px; line-height: 1.7;
+      color: #333; border: 1px solid #e0e0e0; border-radius: 8px;
+      padding: 12px 14px; resize: vertical; outline: none;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    .body-textarea:focus { border-color: #0A66C2; }
+    .char-count { font-size: 11px; color: #aaa; text-align: right; margin-top: 5px; }
+    .char-count.warn { color: #E67E22; }
+    .char-count.over { color: #e74c3c; }
+
+    /* Modal Tabs */
+    .modal-tabs { display: flex; border-bottom: 1px solid #eee; padding: 0 20px; }
+    .modal-tab {
+      padding: 10px 16px; font-size: 13px; font-weight: 600; color: #888;
+      border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.15s;
+      margin-bottom: -1px;
+    }
+    .modal-tab.active { color: #0A66C2; border-bottom-color: #0A66C2; }
+    .modal-tab:hover:not(.active) { color: #444; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .design-textarea {
+      width: 100%; min-height: 260px; font-size: 13px; line-height: 1.7;
+      color: #333; border: 1px solid #e0e0e0; border-radius: 8px;
+      padding: 12px 14px; resize: vertical; outline: none;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    .design-textarea:focus { border-color: #0A66C2; }
+    .design-hint { font-size: 12px; color: #aaa; margin-bottom: 8px; }
+
+    /* Attachments */
+    .att-zone {
+      border: 2px dashed #ccc; border-radius: 10px;
+      padding: 28px 16px; text-align: center; cursor: pointer;
+      transition: all 0.15s; margin-bottom: 14px; color: #aaa;
+      user-select: none;
+    }
+    .att-zone:hover, .att-zone.dragging { border-color: #0A66C2; background: #f0f7ff; color: #0A66C2; }
+    .att-zone-icon { font-size: 26px; margin-bottom: 6px; }
+    .att-zone-text { font-size: 13px; font-weight: 500; }
+    .att-zone-hint { font-size: 11px; color: #ccc; margin-top: 3px; }
+    .att-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .att-item {
+      border: 1px solid #e0e0e0; border-radius: 8px;
+      width: 116px; overflow: hidden; display: flex; flex-direction: column;
+      background: white; transition: box-shadow 0.15s;
+    }
+    .att-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .att-thumb { width: 100%; height: 76px; object-fit: cover; display: block; cursor: pointer; }
+    .att-pdf-icon { width: 100%; height: 76px; display: flex; align-items: center; justify-content: center; background: #fdf2f0; font-size: 30px; cursor: pointer; }
+    .att-meta { padding: 6px 8px; flex: 1; }
+    .att-name { font-size: 11px; color: #333; font-weight: 500; word-break: break-all; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .att-size { font-size: 10px; color: #aaa; margin-top: 2px; }
+    .att-actions { display: flex; gap: 4px; padding: 5px 6px; border-top: 1px solid #f0f0f0; }
+    .att-btn { flex: 1; font-size: 10px; padding: 4px 0; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    .att-btn-open { background: #e8f0fb; color: #0A66C2; }
+    .att-btn-open:hover { background: #d0e4f7; }
+    .att-btn-del { background: #fdecea; color: #c0392b; }
+    .att-btn-del:hover { background: #f5c0bb; }
+    .att-empty { color: #bbb; font-size: 13px; text-align: center; padding: 8px 0; }
+
+    /* Modal Footer */
+    .modal-footer {
+      padding: 12px 20px; border-top: 1px solid #eee;
+      display: flex; gap: 8px; justify-content: space-between; align-items: center;
+    }
+    .footer-left { display: flex; gap: 8px; }
+    .footer-right { display: flex; gap: 8px; }
+    .btn {
+      padding: 8px 18px; border-radius: 20px; border: none;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-primary { background: #0A66C2; color: white; }
+    .btn-primary:hover { background: #004182; }
+    .btn-secondary { background: #f3f2ef; color: #333; }
+    .btn-secondary:hover { background: #e0e0e0; }
+    .btn-danger { background: #fdecea; color: #c0392b; }
+    .btn-danger:hover { background: #f5c0bb; }
+    .btn-copy { background: #f3f2ef; color: #333; }
+    .btn-copy:hover { background: #e0e0e0; }
+    .btn-save { background: #0A66C2; color: white; }
+    .btn-save:hover { background: #004182; }
+
+    /* Confirm dialog */
+    .confirm-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+      background: white; border-radius: 12px; padding: 28px 28px 20px;
+      max-width: 360px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .confirm-box h3 { font-size: 16px; margin-bottom: 8px; }
+    .confirm-box p { font-size: 14px; color: #666; margin-bottom: 20px; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: #1d1d1d; color: white; padding: 10px 20px; border-radius: 20px;
+      font-size: 13px; font-weight: 500; z-index: 300;
+      transition: transform 0.3s ease; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .empty { text-align: center; padding: 32px; color: #aaa; font-size: 14px; }
+    .source-text { font-size: 12px; color: #aaa; margin-top: 6px; }
+
+    /* ── Main nav tabs ─────────────────────────────────────── */
+    .main-nav {
+      background: white; border-bottom: 1px solid #e0e0e0;
+      display: flex; padding: 0 32px;
+    }
+    .main-nav-tab {
+      padding: 14px 22px; font-size: 14px; font-weight: 600;
+      color: #888; border-bottom: 3px solid transparent;
+      cursor: pointer; transition: all 0.15s; margin-bottom: -1px;
+    }
+    .main-nav-tab.active { color: #0A66C2; border-bottom-color: #0A66C2; }
+    .main-nav-tab:hover:not(.active) { color: #444; }
+
+    /* ── Progress view ─────────────────────────────────────── */
+    #view-progress { display: none; }
+    .progress-container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .progress-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    .progress-header h2 { font-size: 22px; font-weight: 700; }
+
+    .progress-summary { display: flex; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+    .metric-card {
+      background: white; border-radius: 10px; padding: 20px 24px;
+      flex: 1; min-width: 160px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .metric-label { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .metric-value { font-size: 30px; font-weight: 700; color: #1d1d1d; line-height: 1; }
+    .metric-growth { font-size: 12px; margin-top: 6px; font-weight: 500; }
+    .growth-pos { color: #27AE60; }
+    .growth-neg { color: #e74c3c; }
+    .growth-neu { color: #aaa; }
+
+    .progress-table-wrap {
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden;
+    }
+    .progress-table { width: 100%; border-collapse: collapse; }
+    .progress-table th {
+      padding: 12px 18px; text-align: left; font-size: 11px;
+      font-weight: 700; color: #888; text-transform: uppercase;
+      letter-spacing: 0.5px; border-bottom: 2px solid #f0f0f0; background: #fafafa;
+    }
+    .progress-table td { padding: 15px 18px; font-size: 14px; border-bottom: 1px solid #f5f5f5; }
+    .progress-table tr:last-child td { border-bottom: none; }
+    .progress-table tr:hover td { background: #fafcff; }
+    .month-cell { font-weight: 600; color: #1d1d1d; }
+    .growth-badge {
+      display: inline-flex; align-items: center;
+      font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+    }
+    .badge-up { background: #eafaf1; color: #27AE60; }
+    .badge-down { background: #fdecea; color: #e74c3c; }
+    .badge-flat { background: #f3f2ef; color: #888; }
+
+    /* ── Monthly check-in modal ────────────────────────────── */
+    .checkin-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .checkin-overlay.open { display: flex; }
+    .checkin-box {
+      background: white; border-radius: 14px; padding: 28px;
+      max-width: 400px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .checkin-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .checkin-box p { font-size: 14px; color: #666; margin-bottom: 22px; }
+    .checkin-fields { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+    .checkin-field label { display: block; font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .checkin-field input {
+      width: 100%; font-size: 16px; font-weight: 600; border: 1px solid #ddd;
+      border-radius: 8px; padding: 10px 12px; outline: none;
+      transition: border-color 0.15s; color: #1d1d1d;
+    }
+    .checkin-field input:focus { border-color: #0A66C2; }
+    .checkin-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+    </svg>
+    <h1>LinkedIn Post Calendar</h1>
+  </div>
+  <div class="header-actions">
+    <button class="btn-header" id="connect-btn" onclick="connectFile()">⚡ Connect posts.json</button>
+    <button class="btn-header primary" onclick="newPost()">+ New Post</button>
+    <a href="https://coldiq.com/free-tools/linkedin-post-previewer" target="_blank" class="btn-header" style="text-decoration:none;">Preview on LinkedIn</a>
+  </div>
+</header>
+
+<div class="main-nav">
+  <div class="main-nav-tab active" onclick="switchMainTab('calendar', this)">📅 Calendar</div>
+  <div class="main-nav-tab" onclick="switchMainTab('progress', this)">📈 Progress</div>
+</div>
+
+<div id="sync-banner" style="display:none; background:#fffbe6; border-bottom:1px solid #f0d060; padding:10px 32px; font-size:13px; color:#7a6000; display:flex; align-items:center; gap:12px;">
+  <span>⚠️ <strong>posts.json not connected.</strong> Your edits are saved locally but won't sync with Claude Code updates. Click <strong>Connect posts.json</strong> to link your file.</span>
+  <button onclick="connectFile()" style="margin-left:auto; padding:5px 14px; border-radius:20px; border:1px solid #c8a000; background:#fff; color:#7a6000; font-size:12px; font-weight:600; cursor:pointer;">Connect now</button>
+</div>
+
+<div class="container" id="view-calendar">
+  <div class="stats" id="stats"></div>
+  <div class="layout">
+    <div class="card">
+      <div class="calendar-header">
+        <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+        <h2 id="month-label"></h2>
+        <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+      </div>
+      <div class="calendar-grid">
+        <div class="day-labels">
+          <div class="day-label">Sun</div><div class="day-label">Mon</div>
+          <div class="day-label">Tue</div><div class="day-label">Wed</div>
+          <div class="day-label">Thu</div><div class="day-label">Fri</div>
+          <div class="day-label">Sat</div>
+        </div>
+        <div class="days-grid" id="days-grid"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="list-header">
+        <div class="list-header-top">
+          <h2>Posts</h2>
+        </div>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
+          <button class="filter-tab" onclick="setFilter('draft', this)">Draft</button>
+          <button class="filter-tab" onclick="setFilter('ready', this)">Ready</button>
+          <button class="filter-tab" onclick="setFilter('missing-visual', this)">Missing Visual</button>
+          <button class="filter-tab" onclick="setFilter('done', this)">Done</button>
+          <button class="filter-tab" onclick="setFilter('posted', this)">Posted</button>
+        </div>
+      </div>
+      <div class="post-list" id="post-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Progress View -->
+<div id="view-progress">
+  <div class="progress-container">
+    <div class="progress-header">
+      <h2>LinkedIn Growth</h2>
+      <button class="btn btn-primary" onclick="openCheckin()">+ Log Month</button>
+    </div>
+    <div class="progress-summary" id="progress-summary"></div>
+    <div class="progress-table-wrap">
+      <table class="progress-table">
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Posts</th>
+            <th>Followers</th>
+            <th>Follower Growth</th>
+            <th>Impressions</th>
+            <th>Impression Growth</th>
+          </tr>
+        </thead>
+        <tbody id="progress-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Check-in Modal -->
+<div class="checkin-overlay" id="checkin-overlay">
+  <div class="checkin-box">
+    <h3>📊 Monthly Check-in</h3>
+    <p id="checkin-subtitle">How did last month go?</p>
+    <div class="checkin-fields">
+      <div class="checkin-field">
+        <label>Posts published</label>
+        <input type="number" id="ci-posts" min="0" placeholder="0">
+      </div>
+      <div class="checkin-field">
+        <label>Total impressions</label>
+        <input type="number" id="ci-impressions" min="0" placeholder="0">
+      </div>
+      <div class="checkin-field">
+        <label>Current followers</label>
+        <input type="number" id="ci-followers" min="0" placeholder="0">
+      </div>
+    </div>
+    <div class="checkin-actions">
+      <button class="btn btn-secondary" onclick="closeCheckin()">Skip for now</button>
+      <button class="btn btn-primary" onclick="saveCheckin()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title-row">
+        <input class="modal-title-input" id="edit-title" type="text" placeholder="Post title..." />
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-meta-row">
+        <div class="meta-field">
+          <span class="meta-label">Date</span>
+          <input class="meta-input" id="edit-date" type="date" onchange="onDateChange()" />
+        </div>
+        <div class="meta-field">
+          <span class="meta-label">Time</span>
+          <input class="meta-input" id="edit-time" type="time" style="width:90px;" />
+        </div>
+        <div class="meta-field">
+          <span class="meta-label">Status</span>
+          <select class="status-select" id="edit-status" onchange="onStatusChange()">
+            <option value="draft">Draft</option>
+            <option value="ready">Ready to Post</option>
+            <option value="missing-visual">Missing Visual</option>
+            <option value="done">Done</option>
+            <option value="posted">Posted</option>
+          </select>
+        </div>
+        <div class="meta-field">
+          <span class="meta-label">Source</span>
+          <input class="meta-input" id="edit-source" type="text" placeholder="Source..." style="width:160px;" />
+        </div>
+      </div>
+    </div>
+
+    <div class="tags-editor" id="tags-editor">
+      <!-- tag chips rendered here -->
+      <input class="tag-add-input" id="tag-input" type="text" placeholder="+ Add tag" onkeydown="handleTagInput(event)" />
+    </div>
+
+    <div class="modal-tabs">
+      <div class="modal-tab active" onclick="switchTab('content', this)">Post Content</div>
+      <div class="modal-tab" onclick="switchTab('design', this)">Design Instructions</div>
+      <div class="modal-tab" onclick="switchTab('attachments', this)">Attachments <span id="att-count-badge" style="display:none; background:#0A66C2; color:white; font-size:10px; padding:1px 6px; border-radius:10px; margin-left:4px;"></span></div>
+    </div>
+
+    <div class="modal-body">
+      <div class="tab-panel active" id="tab-content">
+        <textarea class="body-textarea" id="edit-body" placeholder="Write your post here..." oninput="updateCharCount()"></textarea>
+        <div class="char-count" id="char-count">0 characters</div>
+      </div>
+      <div class="tab-panel" id="tab-design">
+        <div class="design-hint">Instructions for your visual designer. Describe the format, colors, layout, visuals, and any specific elements needed.</div>
+        <textarea class="design-textarea" id="edit-design" placeholder="e.g. 3-panel carousel, dark background, LinkedIn blue accents, show a flow diagram of the 3 steps..."></textarea>
+      </div>
+      <div class="tab-panel" id="tab-attachments">
+        <div class="att-zone" id="att-zone"
+          ondragover="event.preventDefault(); this.classList.add('dragging')"
+          ondragleave="this.classList.remove('dragging')"
+          ondrop="handleDrop(event)"
+          onclick="document.getElementById('att-file-input').click()">
+          <div class="att-zone-icon">📎</div>
+          <div class="att-zone-text">Drop files here or click to upload</div>
+          <div class="att-zone-hint">Images (PNG, JPG, GIF, WEBP) and PDFs</div>
+          <input type="file" id="att-file-input" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp" multiple style="display:none" onchange="handleFileSelect(event)">
+        </div>
+        <div class="att-grid" id="att-grid"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="footer-left">
+        <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+      </div>
+      <div class="footer-right">
+        <button class="btn btn-copy" id="copy-btn" onclick="copyPost()">Copy Post</button>
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-save" onclick="savePost()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Dialog -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h3>Delete this post?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" onclick="deletePost()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── INITIAL DATA ───────────────────────────────────────────────
+const INITIAL_POSTS = [
+  {
+    "id": "001",
+    "title": "Claude Code for GTM — 3 Workflows",
+    "body": "Claude Code is hyped for the right reasons.\n\nNot because it writes code for you.\n\nBecause it lets non-technical GTM teams build autonomous workflows that used to require a full engineering sprint.\n\nHere are 3 go-to-market flows you can deploy in your company today:\n\n---\n\n1. End-to-End Outbound Campaign Builder\n\n• Upload a CSV of companies\n• Claude Code tiers them into Tier 1/2/3 using your ICP scoring criteria (pure logic — no AI hallucinations)\n• Finds the right contacts via Apollo's API\n• Enriches missing emails through secondary providers\n• Generates personalized sequences from your saved copy frameworks\n• Pushes the full campaign live into Instantly\n\n153 contacts → enriched → live campaign. ~20 minutes. No Clay. No copy-pasting. No tab-switching.\n\n---\n\n2. LinkedIn Engagement → Outbound Pipeline\n\n• Scrapes everyone who likes or comments on your LinkedIn posts\n• Runs ICP scoring + CRM de-duplication automatically\n• Finds their work email via enrichment providers\n• Routes qualified leads into an outbound sequence\n• Runs weekly on autopilot — no one presses a button\n\nBonus: extend it to monitor competitor posts and keyword-based content. Anyone posting about your category enters your pipeline. One team replaced $300+/month in scraping tools with this single agent.\n\n---\n\n3. Ad Campaign Builder Across LinkedIn, Meta & Google\n\n• Fill in a Google Sheet: campaign name, targeting, ad copy, landing page\n• Run one prompt in Claude Code\n• It calls the LinkedIn/Meta/Google Ads API automatically\n• Pulls the right creatives from Google Drive\n• Launches the campaign across platforms\n\nA full campaign that used to take 30+ minutes in the UI now takes under 2 minutes — without touching a single dashboard.\n\n---\n\nThe real unlock isn't any single workflow.\n\nIt's that your scoring criteria, copy frameworks, and past campaign data all live in one place — and compound every time you run a new campaign.\n\nWhich of these three would have the biggest impact on your GTM motion right now?",
+    "status": "ready",
+    "publishDate": "2026-03-03",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Kenny & Ivan",
+    "tags": ["GTM", "AI", "Claude Code", "Outbound"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue (#0A66C2) accents.\n\nHEADLINE (top, centered): 'Claude Code is hyped for the right reasons.' Bold, large.\nSUBHEAD: '3 GTM workflows you can deploy today.' Smaller, grey.\n\nHORIZONTAL FLOW — 3 equal columns side by side, connected by arrows (→):\n\n[ Outbound Campaign Builder ] → [ LinkedIn Engagement Pipeline ] → [ Ad Campaign Builder ]\n\nChildren below each column (small text, bullet style):\n\nCol 1 — Outbound Campaign Builder:\n• Upload CSV of companies\n• ICP scoring → Tier 1/2/3\n• Find contacts via Apollo\n• Enrich emails\n• Generate sequences\n• Push to Instantly\n\nCol 2 — LinkedIn Engagement Pipeline:\n• Scrape post engagers\n• Enrich in Clay\n• ICP score + de-dup\n• Find work emails\n• Route to outbound sequence\n\nCol 3 — Ad Campaign Builder:\n• Fill Google Sheet\n• Run one prompt\n• Calls LinkedIn/Meta/Google APIs\n• Pulls creatives from Drive\n• Launches campaign\n\nFOOTER (bottom, centered): '153 contacts → enriched → live campaign. 20 minutes.' in LinkedIn blue.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "002",
+    "title": "LinkedIn Ad Campaign Builder",
+    "body": "Building a full LinkedIn ad campaign used to take me 30+ minutes of fighting the UI.\n\nNow it takes under 2 minutes. I don't touch LinkedIn's campaign manager at all.\n\nHere's what I built with Claude Code:\n\nA Google Sheet where I fill in:\n• Campaign name\n• Targeting criteria (ABM list, job titles, bottom of funnel, etc.)\n• Ad copy reference\n• Landing page + CTA\n\nThen I run one prompt in Claude Code. It reads the sheet, calls the LinkedIn Ads API, pulls the right ad creative from Google Drive, and creates the campaign live.\n\nI built the same thing for Meta Ads and Google Ads.\n\nNo MCP server exists for LinkedIn Ads, so I fed Claude Code the API docs, let it figure out the right calls, and saved the working scripts as reusable \"skills.\"\n\nWe now manage hundreds of thousands in ad spend this way across all three platforms.\n\nThe craziest part? I'm not a developer. I did this in plan mode, one prompt at a time.\n\nIf you're running paid ads at scale and still manually building campaigns in the UI — what would you automate first if you had this?",
+    "status": "ready",
+    "publishDate": "2026-03-04",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Ivan (Head of Growth)",
+    "tags": ["Paid Ads", "LinkedIn Ads", "Claude Code", "AI"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue (#0A66C2) accents.\n\nHEADLINE (top, centered): 'From 30 minutes to 2 minutes.' Bold, large.\nSUBHEAD: 'How I build full ad campaigns with Claude Code.' Grey, smaller.\n\nHORIZONTAL FLOW — 4 nodes connected by arrows (→):\n\n[ Google Sheet ] → [ Claude Code ] → [ APIs Called ] → [ Campaigns Live ]\n\nChildren below each node:\n\nNode 1 — Google Sheet:\n• Campaign name\n• Targeting criteria\n• Ad copy reference\n• Landing page + CTA\n\nNode 2 — Claude Code:\n• Reads the sheet\n• Calls platform APIs\n• Pulls creatives from Drive\n• No manual UI work\n\nNode 3 — APIs Called:\n• LinkedIn Ads API\n• Meta Ads API\n• Google Ads API\n\nNode 4 — Campaigns Live:\n• Correct targeting set\n• Ad creatives mapped\n• Ready to serve\n• Under 2 minutes\n\nFOOTER (bottom, centered): 'Hundreds of thousands in ad spend managed this way.' in grey italic.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "003",
+    "title": "The $300/Month Scraping Tool I Replaced",
+    "body": "Every LinkedIn post your team publishes is a goldmine of warm intent signals.\n\nMost teams ignore it. We built an agent to mine it automatically.\n\nHere's what we built with Claude Code:\n\nWhen someone likes, comments on, or shares one of our LinkedIn posts, our agent:\n• Scrapes all engagers via a scraping API\n• Sends them to Clay for enrichment\n• Runs ICP scoring + CRM de-dup + blocklist checks\n• Finds their work emails\n• Routes them into Instantly for an outbound sequence\n\nThe whole thing runs weekly on autopilot, deployed on Railway so it never stops.\n\nBefore Claude Code, I was paying $300+/month for dedicated scraping tools.\n\nNow I pay nothing extra — and it's more tightly integrated with our stack.\n\nWe also extended it to monitor competitor posts and keyword-based posts. Anyone posting about \"ABM\" or \"go-to-market\"? We scrape their audience and push them into LinkedIn Ads as a custom targeting segment.\n\nAre you using LinkedIn engagement as an outbound signal?",
+    "status": "ready",
+    "publishDate": "2026-03-05",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Ivan (Head of Growth)",
+    "tags": ["Outbound", "LinkedIn", "Claude Code", "AI", "Scraping"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. Green accents for savings.\n\nHEADLINE (top, centered): '$300/month → $0' Bold, very large. Strikethrough on '$300/month' in grey, '$0' in bright green.\nSUBHEAD: 'We replaced our scraping stack with one Claude Code agent.' Grey, smaller.\n\nHORIZONTAL FLOW — 5 nodes connected by arrows (→):\n\n[ LinkedIn Post ] → [ Scrape Engagers ] → [ Enrich in Clay ] → [ Score & Filter ] → [ Route to Instantly ]\n\nChildren below each node:\n\nNode 1 — LinkedIn Post:\n• Any post from your team\n• Likes, comments, shares\n• Runs automatically weekly\n\nNode 2 — Scrape Engagers:\n• Scraping API pulls all engagers\n• Name, profile, company\n• Also monitors competitor posts\n\nNode 3 — Enrich in Clay:\n• Job title, company size\n• Tech stack signals\n• Work email found\n\nNode 4 — Score & Filter:\n• ICP scoring applied\n• CRM de-duplication\n• Blocklist check\n\nNode 5 — Route to Instantly:\n• Qualified leads added to sequence\n• Deployed on Railway — 24/7\n• Zero manual input\n\nFOOTER: 'Runs every week. Zero button presses.' in grey italic.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "004",
+    "title": "Full Outbound Campaign in 20 Minutes",
+    "body": "153 contacts. Enriched emails. Personalized copy. Live campaign in Instantly.\n\nAll from a CSV — without opening Clay, writing a formula, or copy-pasting anything.\n\nHere's the exact flow I built in Claude Code:\n\nStep 1 — Score your list\nUpload companies. Claude Code reads your ICP scoring criteria and tiers every company into Tier 1/2/3 using Python. Zero AI hallucination risk — pure logic on raw data.\n\nStep 2 — Find contacts\n\"Find me sales leaders at Tier 1 and Tier 2 companies.\" Claude Code calls the Apollo API. 153 contacts in ~90 seconds.\n\nStep 3 — Enrich emails\nMissing emails get filled via secondary enrichment providers. 149 of 153 came back verified.\n\nStep 4 — Write copy\nClaude Code reads your saved copy frameworks and generates personalized sequences with conditional logic by persona/industry.\n\nStep 5 — Push to Instantly\nCampaign appears live — fully loaded with leads and sequences.\n\nThe biggest unlock isn't speed. It's that your scoring criteria, copy frameworks, and campaign history compound over time in one place.\n\nWhat part of your outbound workflow still requires the most manual effort?",
+    "status": "ready",
+    "publishDate": "2026-03-06",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Kenny (Head of GTM)",
+    "tags": ["Outbound", "Cold Email", "Claude Code", "GTM", "Apollo"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue accents.\n\nHEADLINE (top, centered): '153 contacts. Enriched. Live campaign. 20 minutes.' Bold, large.\nSUBHEAD: 'Here is the exact 5-step flow built inside Claude Code.' Grey, smaller.\n\nHORIZONTAL FLOW — 5 nodes connected by arrows (→):\n\n[ Score List ] → [ Find Contacts ] → [ Enrich Emails ] → [ Write Copy ] → [ Push to Instantly ]\n\nChildren below each node:\n\nNode 1 — Score List:\n• Upload CSV of companies\n• Claude reads scoring criteria\n• Tiers into Tier 1 / 2 / 3\n• Pure Python logic — no AI errors\n\nNode 2 — Find Contacts:\n• Apollo API called automatically\n• Targets sales leaders at Tier 1+2\n• 153 contacts found in ~90 sec\n\nNode 3 — Enrich Emails:\n• Secondary providers called\n• Lead Magic, Blitz API, Crest Data\n• 149 of 153 emails verified\n\nNode 4 — Write Copy:\n• Reads saved copy frameworks\n• Personalized by persona/industry\n• Conditional logic applied\n\nNode 5 — Push to Instantly:\n• Campaign created via API\n• Leads + sequences loaded\n• Ready to send — no manual steps\n\nFOOTER: 'No Clay. No copy-pasting. No tab-switching.' in grey italic.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "005",
+    "title": "Boris Cherny's 8 Claude Code Tips",
+    "body": "The creator of Claude Code just shared how his own team uses it.\n\nHere are the 8 tips that actually matter:\n\n1. Run tasks in parallel\nSpin up 3-5 git worktrees at once, each running its own Claude session. It's the single biggest productivity unlock — hop between them in one keystroke.\n\n2. Always start complex tasks in plan mode\nPour your energy into the plan so Claude can 1-shot the implementation. One person writes the plan, a second Claude reviews it as a staff engineer.\n\n3. Invest in your CLAUDE.md\nAfter every correction, end with: \"Update your CLAUDE.md so you don't make that mistake again.\" Keep iterating until Claude's mistake rate measurably drops.\n\n4. Build your own skills\nIf you do something more than once a day, turn it into a reusable skill or command. Commit them to git and reuse across every project.\n\n5. Let Claude fix its own bugs\nEnable the Slack MCP, paste a thread, and say \"fix.\" Point it at Docker logs. Just say \"Go for the failing CI tests.\" Don't micromanage — it's surprisingly capable.\n\n6. Prompt like you mean it\n• Say \"Grill me on these changes and don't make a PR until I pass your test\"\n• After a mediocre fix: \"Knowing everything you know now, scrap this and implement the elegant solution\"\n• Write detailed specs. The more specific, the better the output.\n\n7. Use subagents\nOffload individual tasks to subagents to keep your main context window clean. For complex problems, run 5+ at once in parallel.\n\n8. Use it for data & analytics\nAsk Claude to use the bq CLI to pull and analyze metrics on the fly. The team hasn't written a line of SQL in 6+ months.\n\n---\n\nThere's no one right way to use Claude Code.\n\nBut if the team that built it is doing all of the above — that's a pretty good place to start.\n\nWhich of these are you not doing yet?",
+    "status": "ready",
+    "publishDate": "2026-03-07",
+    "publishTime": "09:00",
+    "source": "Boris Cherny — Instagram Screenshots",
+    "tags": ["Claude Code", "AI", "Productivity"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue (#0A66C2) numbers.\n\nHEADLINE (top, centered): 'The creator of Claude Code shared 8 tips his team actually uses.' Bold, large.\nSUBHEAD: 'Boris Cherny, Anthropic.' Grey, smaller. Optional: small avatar circle placeholder next to name.\n\nHORIZONTAL LAYOUT — 2 rows of 4 tips each. Each tip is a vertical card with number + title + child description.\n\nRow 1 (tips 1–4), left to right:\n\n[ 01 Parallel Work ] [ 02 Plan Mode ] [ 03 CLAUDE.md ] [ 04 Build Skills ]\n\nRow 2 (tips 5–8), left to right:\n\n[ 05 Self-Fix Bugs ] [ 06 Better Prompts ] [ 07 Subagents ] [ 08 Data & Analytics ]\n\nChildren below each tip card:\n\n01 — Parallel Work: Spin up 3-5 worktrees at once. Biggest productivity unlock.\n02 — Plan Mode: Pour energy into the plan. Claude 1-shots the execution.\n03 — CLAUDE.md: After every mistake, update it. Mistake rate drops over time.\n04 — Build Skills: If you do it twice, make it a skill. Commit and reuse.\n05 — Self-Fix Bugs: Paste the Slack thread. Say 'fix.' Don't micromanage.\n06 — Better Prompts: Write detailed specs. Challenge Claude to earn the PR.\n07 — Subagents: Offload tasks. Run 5+ in parallel for complex problems.\n08 — Data & Analytics: Use bq CLI. Zero SQL written in 6+ months.\n\nFOOTER: 'Source: Boris Cherny, Creator of Claude Code.' Grey, small.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "006",
+    "title": "Claude Code as a GTM Operating System",
+    "body": "Most people use AI like a smarter Google search.\n\nThe teams winning right now are using it as an operating system for their entire GTM motion.\n\nInside Claude Code, you maintain a folder that acts as the brain of your operation:\n\n• CLAUDE.md — instructions and context for every agent\n• Scoring criteria — how you tier your ICP\n• Copy frameworks — email structures that are already converting\n• API docs — so Claude never has to re-learn your tools\n• Skills — reusable scripts saved every time a workflow succeeds\n\nBefore this, my copy frameworks were in Google Docs. My scoring was in Clay. My leads were in Apollo. My campaigns were in Instantly. Nothing talked to each other.\n\nNow one prompt orchestrates the entire process.\n\nI'm managing 10+ client campaigns simultaneously this way.\n\nThe teams that build this infrastructure early will have a compounding advantage that's very hard to catch up with.\n\nAre you building your GTM context to compound — or starting from scratch every campaign?",
+    "status": "ready",
+    "publishDate": "2026-03-08",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Kenny (Head of GTM)",
+    "tags": ["GTM", "Claude Code", "AI", "Outbound", "Strategy"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue accents.\n\nHEADLINE (top, centered): 'Claude Code is not a chatbot. It is your GTM operating system.' Bold, large.\nSUBHEAD: 'Here is what lives inside — and what it controls.' Grey, smaller.\n\nHORIZONTAL FLOW — 3 sections connected by arrows (→):\n\n[ Your Prompt ] → [ Claude Code Brain ] → [ Tools Orchestrated ]\n\nChildren below each section:\n\nSection 1 — Your Prompt:\n• 'Run campaign for [Client X]'\n• One sentence, natural language\n• No tabs, no copy-pasting\n\nSection 2 — Claude Code Brain (center, slightly larger box, highlighted in blue):\n• CLAUDE.md — agent instructions\n• Scoring Criteria — ICP tiers\n• Copy Frameworks — proven email formulas\n• API Docs — tool references\n• Skills — reusable saved scripts\n\nSection 3 — Tools Orchestrated:\n• Apollo — contact sourcing\n• Clay — enrichment\n• Instantly — campaign creation\n• LinkedIn Ads — ad targeting\n• Railway — deployment\n\nFOOTER: 'Managing 10+ client campaigns simultaneously this way.' Grey italic.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "008",
+    "title": "Claude Code vs Claude Cowork — What's the Difference?",
+    "body": "Anthropic has two agentic products right now.\n\nMost people don't know the difference — or that both exist.\n\nHere's the breakdown:\n\n---\n\nClaude Code — The Agent for Builders\n\nWhat it is: A terminal-based agent that lives on your machine and operates like a technical co-founder.\n\nWhat it can do:\n• Reads and writes files directly on your system — no uploads\n• Runs commands, tests, and creates pull requests\n• Builds reusable skills and automated workflows\n• Runs Agent Teams: multiple agents that communicate with each other, share discoveries, and coordinate tasks in parallel\n• Stores all memory and context locally — you own everything\n• Deploys autonomous agents via Railway and N8N that run 24/7\n\nWhat it can't do:\n• Run without a terminal — there is no GUI\n• Generate formatted Excel or PowerPoint natively\n• Schedule recurring tasks without extra setup\n\nWho it's for: Developers, GTM operators, growth teams. Any non-technical person willing to spend a day learning the basics. The ceiling is very high.\n\n---\n\nClaude Cowork — The Agent for Knowledge Workers\n\nWhat it is: A desktop app that brings agentic capabilities to business teams — no terminal required.\n\nWhat it can do:\n• Accesses local files directly without manual uploads\n• Breaks complex tasks into sub-tasks and runs them in parallel inside an isolated VM\n• Generates formatted Excel spreadsheets, PowerPoint presentations, and polished documents\n• Schedules and runs recurring tasks automatically\n• Connects natively to Google Drive, Gmail, Calendar, DocuSign, Apollo, Clay, Outreach, and 10+ tools via MCP\n• Runs as an add-in directly inside Microsoft Excel and PowerPoint\n\nWhat it can't do:\n• Build persistent agents or reusable skills like Claude Code\n• Integrate with developer workflows or run in a terminal\n• Store conversation history in audit logs — it's local only\n\nWho it's for: Business, ops, and knowledge workers who need autonomous task execution without touching a terminal.\n\n---\n\nSame AI. Completely different use cases.\n\nClaude Code builds the system.\nClaude Cowork runs the work.\n\nIf you're in GTM, sales, or growth — Claude Code gives you the higher ceiling.\nIf you're in ops, finance, or management — Cowork gets you there faster.\n\nWhich one fits your day-to-day?",
+    "status": "draft",
+    "publishDate": "2026-03-27",
+    "publishTime": "09:00",
+    "source": "Web Research — Claude Help Center, VentureBeat, Anthropic Blog",
+    "tags": ["Claude Code", "Claude Cowork", "AI", "Tools"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue (#0A66C2) accents.\n\nHEADLINE (top, centered): 'Claude Code vs Claude Cowork — Same AI. Different jobs.' Bold, large.\nSUBHEAD: 'Here is exactly what each one does — and who should use what.' Grey, smaller.\n\nHORIZONTAL LAYOUT — 2 equal columns side by side, separated by a thin vertical divider line. No arrows — parallel comparison.\n\n[ Claude Code ] | [ Claude Cowork ]\n\nChildren below each column:\n\nCol 1 — Claude Code:\nIcon: terminal/brackets\nLabel: 'The Agent for Builders' (blue subtitle)\nCAN DO:\n• Reads + writes files directly on your system\n• Runs commands, tests, pull requests\n• Builds reusable skills + workflows\n• Agent Teams run in parallel\n• Deploys 24/7 via Railway + N8N\nCAN'T DO:\n• No GUI — terminal only\n• No native Excel/PowerPoint output\nBottom tag: WHO IT IS FOR: GTM, Dev & Growth Teams\n\nCol 2 — Claude Cowork:\nIcon: desktop window\nLabel: 'The Agent for Knowledge Workers' (grey subtitle)\nCAN DO:\n• Desktop app — no terminal needed\n• Runs tasks in isolated VM\n• Generates Excel, PowerPoint, reports\n• Scheduled recurring tasks\n• Native connectors: Drive, Gmail, Apollo, Clay, DocuSign + 10 more\nCAN'T DO:\n• No persistent agents or reusable skills\n• No dev workflow integration\nBottom tag: WHO IT IS FOR: Ops, Finance, Business Teams\n\nFOOTER (full width, centered): 'Claude Code builds the system. Claude Cowork runs the work.' White italic.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "007",
+    "title": "Running Autonomous GTM Agents 24/7",
+    "body": "Our outbound agents don't sleep.\n\nEvery week, without anyone pressing a button, Claude Code scrapes engagement from our team's LinkedIn posts, enriches the leads, and routes them into outbound sequences.\n\nHere's how we made it autonomous:\n\nThe agent = just a folder. A script, a prompt, a requirements file. Claude Code isn't magic — it's organized code you don't have to write yourself.\n\nRailway = where we deploy it. Once live, it runs on its own schedule, 24/7.\n\nN8N = for complex multi-step orchestration alongside Railway.\n\nThe result for our social engager:\n• Monitors all team LinkedIn posts weekly\n• Scrapes every new engager\n• Enriches and qualifies against ICP\n• Routes into Instantly or flags in Slack for SDRs\n\nWe also monitor competitor posts and keyword-based content — anyone engaging with \"go-to-market\" or \"ABM\" gets pulled into our targeting pool.\n\nSetup took trial and error. But once a workflow succeeds, you save it as a skill — a reusable script Claude Code can call anytime.\n\nMost people think Claude Code is for one-off tasks. The real unlock is deploying it as infrastructure that runs your GTM motion while you sleep.\n\nWhat would you automate first if your agents could run 24/7?",
+    "status": "ready",
+    "publishDate": "2026-03-09",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Ivan (Head of Growth)",
+    "tags": ["GTM", "Claude Code", "AI", "Automation", "Railway"],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue accents.\n\nHEADLINE (top, centered): 'Our outbound agents don't sleep.' Bold, large.\nSUBHEAD: 'Here is the autonomous pipeline running 24/7 without anyone pressing a button.' Grey, smaller.\n\nHORIZONTAL FLOW — 5 nodes connected by arrows (→):\n\n[ LinkedIn Posts ] → [ Scrape Engagers ] → [ Enrich & Score ] → [ Route Leads ] → [ Deploy on Railway ]\n\nChildren below each node:\n\nNode 1 — LinkedIn Posts:\n• All team posts monitored weekly\n• Likes, comments, shares tracked\n• Competitor posts also scraped\n• Keyword posts monitored (e.g. 'ABM')\n\nNode 2 — Scrape Engagers:\n• Scraping API pulls all engagers\n• Name, profile URL, company\n• Runs automatically — no trigger needed\n\nNode 3 — Enrich & Score:\n• Clay enrichment applied\n• ICP scoring + CRM de-dup\n• Blocklist check\n• Work email found\n\nNode 4 — Route Leads:\n• Qualified → Instantly sequence\n• Flagged → Slack alert for SDR\n• Audiences → LinkedIn Ads targeting\n\nNode 5 — Deploy on Railway:\n• Agent lives as a folder\n• Script + prompt + requirements\n• Scheduled via Railway + N8N\n• Zero maintenance after setup\n\nFOOTER: 'Once a workflow works, save it as a skill. It runs forever.' Grey italic.\nLOGO: bottom-right corner."
+  }
+,
+  {
+    "id": "010",
+    "title": "Claude Dispatch — Run Your AI Agent From Your Phone",
+    "body": "Tens of thousands of API keys got leaked running AI agents from a phone.\n\nAnthropic just built the native fix. It's called Claude Dispatch.\n\nHere's what it is, why it matters, and how to set it up in 5 minutes:\n\nWhat it does:\nYour phone sends a message. Your desktop runs the skill. Results come back to your phone.\n\nThink of it as a walkie-talkie for your agent stack. No API keys exposed. No third-party risk.\n\nWhy it beats OpenClaw:\n\nSecurity:\n→ OpenClaw leaked tens of thousands of API keys\n→ Dispatch is sandboxed and local — every tool access requires explicit approval\n→ The permission layer is built by Anthropic, not a random open-source project\n\nCost:\n→ OpenClaw bills direct API calls — pay per token on every message\n→ One user burned $100 in their first few days\n→ Dispatch runs on your flat Co-work subscription — 4–8x cheaper\n\nWhat you can run from your phone:\n→ Scrape 200 leads while waiting for a train\n→ Clean your inbox — auto-mark spam, pre-draft replies from past email history\n→ Generate thumbnails, run research, fire off any Claude Code skill you've built\n\nAlready on Claude Code? Copy your skills folder to Claude Co-work. Dispatch picks them up automatically.\n\nSetup: 5 minutes\n→ Update Claude desktop\n→ Update the Claude mobile app\n→ Enable Dispatch in the Co-work sidebar\n→ Pair your phone — done\n\nAvailable on Max plans now. Pro plans coming soon.\n\nThis replaces 80–90% of what OpenClaw does — without the security risks, the API costs, or the setup drama.\n\nYour computer stays home. Your agent comes with you.\n\nWhat's the first skill you'd run from your phone? 👇",
+    "status": "draft",
+    "publishDate": "2026-03-19",
+    "publishTime": "09:00",
+    "source": "YouTube — Claude Dispatch feature walkthrough",
+    "tags": [
+      "Claude Code",
+      "Claude Dispatch",
+      "AI"
+    ],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. Blue accent (#0A66C2).\n\nHEADLINE (top, centered): 'Your phone. Your agent. Your computer does the work.' Bold, large.\nSUBHEAD: 'Claude Dispatch just shipped. Here is how it works.' Grey, smaller.\n\nTWO-COLUMN LAYOUT:\n\nLEFT — How it works (vertical flow):\n[ Your Phone ] → sends message via Dispatch\n[ Claude Co-work ] → runs the skill locally on desktop\n[ Results ] → delivered back to your phone\n\nRIGHT — Why it beats OpenClaw (two stat cards):\nCard 1 — Security:\n• OpenClaw: tens of thousands of API keys leaked\n• Dispatch: sandboxed, local, explicit permissions only\n\nCard 2 — Cost:\n• OpenClaw: pay per token — one user burned  in first few days\n• Dispatch: flat Co-work subscription — 4–8x cheaper\n\nBELOW — What you can run:\n→ Lead scraping → Inbox cleaning → Thumbnail generation → Any Claude Code skill\n\nFOOTER: 'Available on Max plans now. Pro plans coming soon.' Grey italic.\nLOGO: bottom-right corner.",
+    "attachments": []
+  },
+  {
+    "id": "011",
+    "title": "Claude Code: 57-Second Campaign",
+    "body": "We built a complete cold email campaign in 57 seconds.\nCompany list to 154 leads loaded in Instantly. Zero errors. Zero manual work.\n\nHere is the full system.\n\n1️⃣ Score the companies\nDrop your company list into Claude Code. It reads your ICP scoring criteria and tiers every company — T1, T2, T3, disqualified — using a Python script on the raw CSV data. No guessing. No hallucination.\n\n2️⃣ Find the contacts\nTell it the persona you want. Claude hits the Apollo API, pulls the right people at T1 and T2 companies, and returns a breakdown by seniority and contacts per company.\n\n3️⃣ Enrich the emails\n144 of 159 contacts had emails from Apollo. Claude then hit LeadMagic and Lima Data for the remaining 15. Got 10 more. Done in seconds.\n\n4️⃣ Write the copy\nClaude connects to Instantly via API, pulls your best-performing campaigns by reply rate, extracts the frameworks, and generates copy for the new campaign. No starting from scratch.\n\n5️⃣ Create and load the campaign\nClaude creates the campaign in Instantly, injects the copy, uploads all leads, and configures send settings, scheduling, and delivery optimization. All of it.\n\nBefore: company list → score manually → find contacts → enrich → write copy → build campaign → upload leads.\nAfter: company list → one prompt → campaign live in Instantly.\n\nThe tools did not change. Apollo, Instantly, LeadMagic.\nThe layer connecting them did.\n\nWhat part of your outbound setup would you automate first? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-07",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": ["Claude Code", "Outbound", "GTM", "Automation"],
+    "designInstructions": ""
+  },
+  {
+    "id": "012",
+    "title": "GTM Brain: Connected Outbound",
+    "body": "Clay. Apollo. Instantly. 3 tools running your outbound.\nNone of them talking to each other.\n\nApollo has your contacts. Clay has your enrichment. Instantly has your sequences.\nSame data. Siloed everywhere. Every campaign starts from scratch.\n\nWe fixed this with a single Claude Code setup.\n\nHere is how it works:\n\n1️⃣ One folder. All context.\nCompany lists, contact data, copy frameworks, campaign analytics — saved locally. Claude reads all of it before doing anything.\n\n2️⃣ One instruction file. All behavior.\nA CLAUDE.md file tells Claude: use this scoring criteria, find contacts via Apollo, write copy from these frameworks, push to Instantly. Four lines. Nothing more.\n\n3️⃣ Every campaign makes the next one better.\nClaude connects to your Instantly account, pulls best-performing campaigns by analytics, extracts the copy frameworks, and builds on them automatically. The system compounds.\n\nWhat you end up with is a single brain that knows your ICP, your tools, your copy, and your results — all in one place.\n\nOld way: siloed tools, manual handoffs, starting from scratch every campaign.\nNew way: one context layer, everything connected, outputs that improve over time.\n\nHave you tried centralizing your GTM context into one place? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-09",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": ["Claude Code", "GTM", "Outbound", "AI"],
+    "designInstructions": ""
+  },
+  {
+    "id": "013",
+    "title": "Bottoms-Up Outreach Strategy",
+    "body": "Most outbound teams go straight to the VP.\nWe start with the SDR team. Here is why reply rates are higher.\n\nThe logic: by the time you reach the decision-maker, the internal conversation has already started.\n\nHere is the approach:\n\n1. Target the SDR and AE team first\nSend resources, value, webinar invites, lead magnets. Low-stakes outreach. High open rate. They are not the gatekeeper — they are the internal amplifier.\n\n2. Move up to managers and team leads\nThey are talking to their teams. Your name is coming up in internal conversations. Now you have context to reference when you reach out.\n\n3. Reach the VP or CRO last\nTwo things have happened by now. Their team has seen your name. And you can say: \"I've already been working with a few people on your team.\"\n\n4-5 contacts per company. No more.\nEnough to create internal noise. Not enough to burn the account.\n\nAfter 60 days with no reply, re-engage with different people at the same company. The account stays warm. The conversation keeps moving.\n\nMost outbound skips straight to the signature.\nBottoms-up builds the internal case before you ever get there.\n\nWhat is your current approach — top-down or bottoms-up? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-11",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": ["Outbound", "GTM", "Cold Email", "Sales"],
+    "designInstructions": ""
+  },
+  {
+    "id": "014",
+    "title": "Self-Improving Copy via Instantly",
+    "body": "Claude Code reads your best-performing campaigns and writes your next one.\n\nNot from a template you wrote once and forgot about.\nFrom your actual live campaign data — reply rates, open rates, sequences that converted.\n\nHere is how it works.\n\nClaude connects to your Instantly account via API. It pulls campaign analytics, ranks by performance, and extracts the copy from the top-performing sequences.\n\nThose become your live frameworks.\n\nWhen you launch a new campaign, Claude:\n→ Finds the best-performing template for your campaign type\n→ Injects your new context — persona, offer, goal, date\n→ Generates copy that mirrors what already worked\n\nThe longer you run it, the better it gets.\nEvery campaign you launch adds to the data Claude is learning from.\n\nMost teams write copy from scratch every time.\nOr they reuse old templates they vaguely remember working.\n\nThis does neither. It finds what worked, learns the pattern, and builds on it automatically.\n\nBefore: dig through old campaigns manually or start from a blank doc.\nAfter: Claude pulls your best performers and writes the next one in seconds.\n\nAre you systematically learning from your past campaigns or starting fresh each time? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-14",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": ["Cold Email", "Outbound", "Claude Code", "Instantly"],
+    "designInstructions": ""
+  },
+  {
+    "id": "015",
+    "title": "4-Line CLAUDE.md Outbound System",
+    "body": "Our entire outbound operation runs from a 4-line instruction file.\n\nHere is what it says:\n\n→ Score companies using this ICP criteria document\n→ Find contacts via Apollo API\n→ Write copy using our best-performing frameworks\n→ Create and push campaigns to Instantly\n\nThat is it. Four lines. No code. No technical setup.\n\nFrom here, Claude handles everything else:\n→ Reads the API docs for each tool\n→ Connects via API keys you provide\n→ Decides what endpoint to use at each step\n→ Batches work at 100-200 records to maintain quality\n→ Saves all outputs so every campaign builds on the last\n\nThe file is called CLAUDE.md.\nIt is the brain behind the whole system.\n\nMost people think automating outbound at this level requires an engineering team, expensive tooling, or months of setup.\n\nIt requires four lines of plain English and an afternoon.\n\nWhat would your 4-line instruction file say? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-16",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": ["Claude Code", "Outbound", "GTM", "AI"],
+    "designInstructions": ""
+  },
+  {
+    "id": "016",
+    "title": "Record Your Workday — Claude Code",
+    "body": "1 habit that will change how you use Claude Code:\nRecord your workday. All of it.\n\nNot a workflow diagram. Not a list of tools you use.\nA real recording of what you actually do, hour by hour.\n\nThen give it to Claude Code and ask: what should I automate?\n\nHere is why this works:\n\n1. You stop guessing what to automate\nMost teams automate the obvious stuff first. Claude will find the high-leverage tasks — the manual work you have done so many times you stopped noticing it.\n\n2. The output is specific to your business\nNot a generic playbook. A system built around how your team actually operates, the tools you use, and the results you are already getting.\n\n3. Claude already has your context\nYour ICP, your copy, your tools, your process. Feed it once. It builds on it forever.\n\nThe scariest thing about Claude Code is the terminal. It looks like a developer tool.\nOnce you open it, you realize it is just a chat interface — the same as asking Claude or ChatGPT a question.\n\nThe only difference is that this one can actually do things.\n\nStart there. Record a day. See what comes back.\n\nWhat is one task in your GTM workflow you do manually every single day? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-18",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": ["Claude Code", "GTM", "AI", "Productivity"],
+    "designInstructions": ""
+  }
+];
+
+// ─── STATE ──────────────────────────────────────────────────────
+let POSTS = [];
+let fileHandle = null;
+let currentDate = new Date();
+let currentFilter = 'all';
+let activePostId = null;
+let editingTags = [];
+let editingAttachments = [];
+
+// ─── INDEXEDDB (stores file handle between sessions) ────────────
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('linkedin_dashboard', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('handles');
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = () => reject();
+  });
+}
+
+// ─── ATTACHMENTS DB ─────────────────────────────────────────────
+function openAttDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('linkedin_attachments', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('blobs');
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = () => reject();
+  });
+}
+async function saveBlob(id, buffer) {
+  try {
+    const db = await openAttDB();
+    return new Promise(res => {
+      const tx = db.transaction('blobs', 'readwrite');
+      tx.objectStore('blobs').put(buffer, id);
+      tx.oncomplete = () => res(); tx.onerror = () => res();
+    });
+  } catch(e) {}
+}
+async function getBlob(id) {
+  try {
+    const db = await openAttDB();
+    return new Promise(res => {
+      const tx = db.transaction('blobs', 'readonly');
+      const req = tx.objectStore('blobs').get(id);
+      req.onsuccess = () => res(req.result); req.onerror = () => res(null);
+    });
+  } catch(e) { return null; }
+}
+async function deleteBlob(id) {
+  try {
+    const db = await openAttDB();
+    const tx = db.transaction('blobs', 'readwrite');
+    tx.objectStore('blobs').delete(id);
+  } catch(e) {}
+}
+async function storeHandle(handle) {
+  try { const db = await openDB(); const tx = db.transaction('handles','readwrite'); tx.objectStore('handles').put(handle,'postsJson'); } catch(e) {}
+}
+async function getStoredHandle() {
+  try { const db = await openDB(); return new Promise(res => { const tx = db.transaction('handles','readonly'); const req = tx.objectStore('handles').get('postsJson'); req.onsuccess = () => res(req.result); req.onerror = () => res(null); }); } catch(e) { return null; }
+}
+
+// ─── FILE ACCESS ─────────────────────────────────────────────────
+async function connectFile() {
+  try {
+    const [handle] = await window.showOpenFilePicker({ types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }], multiple: false });
+    fileHandle = handle;
+    await storeHandle(handle);
+    const data = await readFile(handle);
+    POSTS = JSON.parse(data);
+    updateConnectBtn(true);
+    hideBanner();
+    renderStats(); renderCalendar(); renderPostList();
+    showToast('posts.json connected — edits will sync automatically');
+  } catch(e) { if (e.name !== 'AbortError') showToast('Could not connect file'); }
+}
+
+async function readFile(handle) {
+  const file = await handle.getFile();
+  return file.text();
+}
+
+async function savePosts() {
+  if (fileHandle) {
+    try {
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(POSTS, null, 2));
+      await writable.close();
+      showToast('Saved to posts.json');
+    } catch(e) { showToast('Save failed — try reconnecting posts.json'); }
+  } else {
+    // fallback: localStorage
+    localStorage.setItem('linkedin_posts_fallback', JSON.stringify(POSTS));
+  }
+}
+
+function updateConnectBtn(connected) {
+  const btn = document.getElementById('connect-btn');
+  if (connected) { btn.textContent = '✓ posts.json connected'; btn.style.background = 'rgba(255,255,255,0.15)'; btn.style.borderColor = 'rgba(255,255,255,0.4)'; }
+  else { btn.textContent = '⚡ Connect posts.json'; }
+}
+function hideBanner() { document.getElementById('sync-banner').style.display = 'none'; }
+function showBanner() { document.getElementById('sync-banner').style.display = 'flex'; }
+
+// ─── STATUS HELPERS ─────────────────────────────────────────────
+const STATUS_LABELS = {
+  'draft': 'Draft',
+  'ready': 'Ready to Post',
+  'missing-visual': 'Missing Visual',
+  'done': 'Done',
+  'posted': 'Posted'
+};
+
+// ─── INIT ───────────────────────────────────────────────────────
+async function init() {
+  // Try to restore previously connected posts.json
+  const handle = await getStoredHandle();
+  if (handle) {
+    try {
+      // Ask browser to re-verify permission (may need user gesture on first load)
+      const perm = await handle.queryPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        fileHandle = handle;
+        const data = await readFile(handle);
+        POSTS = JSON.parse(data);
+        updateConnectBtn(true);
+        hideBanner();
+      } else {
+        // Permission needs re-granting — show banner and load fallback
+        loadFallback();
+        showBanner();
+      }
+    } catch(e) { loadFallback(); showBanner(); }
+  } else {
+    loadFallback();
+    showBanner();
+  }
+  renderStats(); renderCalendar(); renderPostList();
+  loadProgress();
+  checkMonthlyPrompt();
+}
+
+function loadFallback() {
+  // Try localStorage first, then hardcoded INITIAL_POSTS
+  try {
+    const saved = localStorage.getItem('linkedin_posts_fallback');
+    if (saved) { POSTS = JSON.parse(saved); return; }
+  } catch(e) {}
+  POSTS = JSON.parse(JSON.stringify(INITIAL_POSTS));
+}
+
+// ─── STATS ──────────────────────────────────────────────────────
+function renderStats() {
+  const counts = { draft:0, ready:0, 'missing-visual':0, done:0, posted:0 };
+  POSTS.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card stat-draft"><div class="number">${counts.draft}</div><div class="label">Draft</div></div>
+    <div class="stat-card stat-ready"><div class="number">${counts.ready}</div><div class="label">Ready to Post</div></div>
+    <div class="stat-card stat-missing"><div class="number">${counts['missing-visual']}</div><div class="label">Missing Visual</div></div>
+    <div class="stat-card stat-done"><div class="number">${counts.done}</div><div class="label">Done</div></div>
+    <div class="stat-card stat-posted"><div class="number">${counts.posted}</div><div class="label">Posted</div></div>
+  `;
+}
+
+// ─── CALENDAR ───────────────────────────────────────────────────
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function changeMonth(dir) {
+  currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + dir, 1);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const year = currentDate.getFullYear(), month = currentDate.getMonth();
+  document.getElementById('month-label').textContent = `${MONTHS[month]} ${year}`;
+  const today = new Date();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+  const postsByDate = {};
+  POSTS.forEach(p => { postsByDate[p.publishDate] = postsByDate[p.publishDate] || []; postsByDate[p.publishDate].push(p); });
+  let html = '', dayCount = 1, nextCount = 1;
+  for (let i = 0; i < 42; i++) {
+    let dayNum, dateStr, classes = 'day-cell';
+    if (i < firstDay) {
+      dayNum = daysInPrev - firstDay + i + 1;
+      dateStr = formatDate(new Date(year, month - 1, dayNum));
+      classes += ' other-month';
+    } else if (dayCount <= daysInMonth) {
+      dayNum = dayCount++;
+      const d = new Date(year, month, dayNum);
+      dateStr = formatDate(d);
+      if (d.toDateString() === today.toDateString()) classes += ' today';
+    } else {
+      dayNum = nextCount++;
+      dateStr = formatDate(new Date(year, month + 1, dayNum));
+      classes += ' other-month';
+    }
+    const posts = postsByDate[dateStr] || [];
+    if (posts.length > 0) classes += ' has-post';
+    const dots = posts.map(p => `<div class="post-dot dot-${p.status}"></div>`).join('');
+    const onclick = posts.length > 0 ? `onclick="openPost('${posts[0].id}')"` : '';
+    html += `<div class="${classes}" ${onclick}><div class="day-num">${dayNum}</div><div class="post-dots">${dots}</div></div>`;
+  }
+  document.getElementById('days-grid').innerHTML = html;
+}
+
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ─── POST LIST ──────────────────────────────────────────────────
+function setFilter(filter, el) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderPostList();
+}
+
+function renderPostList() {
+  const filtered = POSTS
+    .filter(p => currentFilter === 'all' || p.status === currentFilter)
+    .sort((a, b) => a.publishDate.localeCompare(b.publishDate));
+  if (!filtered.length) {
+    document.getElementById('post-list').innerHTML = `<div class="empty">No posts found.</div>`;
+    return;
+  }
+  document.getElementById('post-list').innerHTML = filtered.map(p => `
+    <div class="post-item ${activePostId === p.id ? 'selected' : ''}" onclick="openPost('${p.id}')">
+      <div class="post-item-top">
+        <div class="post-item-title">${escHtml(p.title)}</div>
+        <span class="status-badge badge-${p.status}">${STATUS_LABELS[p.status] || p.status}</span>
+      </div>
+      <div class="post-item-meta">
+        <span>📅 ${formatDisplayDate(p.publishDate)} ${p.publishTime ? '· ' + p.publishTime : ''}</span>
+      </div>
+      <div class="post-tags">${(p.tags||[]).map(t => `<span class="tag">${escHtml(t)}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+function formatDisplayDate(ds) {
+  const d = new Date(ds + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── TABS ────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ─── MODAL OPEN ─────────────────────────────────────────────────
+function openPost(id) {
+  const post = POSTS.find(p => p.id === id);
+  if (!post) return;
+  activePostId = id;
+  editingTags = [...(post.tags || [])];
+  editingAttachments = JSON.parse(JSON.stringify(post.attachments || []));
+
+  document.getElementById('edit-title').value = post.title || '';
+  document.getElementById('edit-date').value = post.publishDate || '';
+  document.getElementById('edit-time').value = post.publishTime || '09:00';
+  document.getElementById('edit-source').value = post.source || '';
+  document.getElementById('edit-body').value = post.body || '';
+  document.getElementById('edit-status').value = post.status || 'draft';
+  document.getElementById('edit-design').value = post.designInstructions || '';
+
+  // reset to content tab
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector('.modal-tab').classList.add('active');
+  document.getElementById('tab-content').classList.add('active');
+
+  updateStatusSelectStyle();
+  renderTagsEditor();
+  updateCharCount();
+  renderAttachments();
+  renderPostList();
+  document.getElementById('modal').classList.add('open');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  activePostId = null;
+  editingTags = [];
+  editingAttachments = [];
+  renderPostList();
+}
+
+// ─── STATUS SELECT STYLE ────────────────────────────────────────
+function onStatusChange() { updateStatusSelectStyle(); }
+function updateStatusSelectStyle() {
+  const sel = document.getElementById('edit-status');
+  sel.className = 'status-select s-' + sel.value;
+}
+
+// ─── DATE CHANGE ────────────────────────────────────────────────
+function onDateChange() { /* live, saved on Save */ }
+
+// ─── TAGS ───────────────────────────────────────────────────────
+function renderTagsEditor() {
+  const editor = document.getElementById('tags-editor');
+  const input = document.getElementById('tag-input');
+  editor.innerHTML = '';
+  editingTags.forEach((tag, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${escHtml(tag)}<button class="tag-remove" onclick="removeTag(${i})">×</button>`;
+    editor.appendChild(chip);
+  });
+  editor.appendChild(input);
+  input.value = '';
+}
+
+function removeTag(i) {
+  editingTags.splice(i, 1);
+  renderTagsEditor();
+}
+
+function handleTagInput(e) {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    const val = e.target.value.trim().replace(/,$/, '');
+    if (val && !editingTags.includes(val)) {
+      editingTags.push(val);
+      renderTagsEditor();
+    } else { e.target.value = ''; }
+  }
+}
+
+// ─── CHAR COUNT ─────────────────────────────────────────────────
+function updateCharCount() {
+  const len = document.getElementById('edit-body').value.length;
+  const el = document.getElementById('char-count');
+  el.textContent = `${len.toLocaleString()} characters`;
+  el.className = 'char-count' + (len > 3000 ? ' over' : len > 2500 ? ' warn' : '');
+}
+
+// ─── ATTACHMENTS UI ─────────────────────────────────────────────
+async function handleDrop(e) {
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById('att-zone').classList.remove('dragging');
+  if (e.dataTransfer.files.length) await addFiles(e.dataTransfer.files);
+}
+function handleFileSelect(e) {
+  if (e.target.files.length) addFiles(e.target.files);
+  e.target.value = '';
+}
+async function addFiles(files) {
+  for (const file of files) {
+    const id = 'att_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    const buffer = await file.arrayBuffer();
+    await saveBlob(id, buffer);
+    editingAttachments.push({ id, name: file.name, type: file.type, size: file.size });
+  }
+  renderAttachments();
+}
+async function renderAttachments() {
+  const grid = document.getElementById('att-grid');
+  updateAttBadge();
+  if (!editingAttachments.length) {
+    grid.innerHTML = '<div class="att-empty">No attachments yet.</div>';
+    return;
+  }
+  const items = await Promise.all(editingAttachments.map(async (att) => {
+    const buf = await getBlob(att.id);
+    let preview;
+    if (buf && att.type.startsWith('image/')) {
+      const url = URL.createObjectURL(new Blob([buf], { type: att.type }));
+      preview = `<img class="att-thumb" src="${url}" alt="${escHtml(att.name)}" onclick="openAttachment('${att.id}','${escHtml(att.type)}')">`;
+    } else {
+      preview = `<div class="att-pdf-icon" onclick="openAttachment('${att.id}','${escHtml(att.type)}')">📄</div>`;
+    }
+    const sz = att.size > 1048576 ? (att.size/1048576).toFixed(1)+'MB' : Math.round(att.size/1024)+'KB';
+    return `<div class="att-item">
+      ${preview}
+      <div class="att-meta"><div class="att-name">${escHtml(att.name)}</div><div class="att-size">${sz}</div></div>
+      <div class="att-actions">
+        <button class="att-btn att-btn-open" onclick="openAttachment('${att.id}','${escHtml(att.type)}')">Open</button>
+        <button class="att-btn att-btn-del" onclick="removeAttachment('${att.id}')">✕</button>
+      </div>
+    </div>`;
+  }));
+  grid.innerHTML = items.join('');
+}
+function updateAttBadge() {
+  const badge = document.getElementById('att-count-badge');
+  if (editingAttachments.length > 0) {
+    badge.textContent = editingAttachments.length;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+async function openAttachment(id, type) {
+  const buf = await getBlob(id);
+  if (!buf) { showToast('File not found in this browser'); return; }
+  const url = URL.createObjectURL(new Blob([buf], { type }));
+  window.open(url, '_blank');
+}
+async function removeAttachment(id) {
+  await deleteBlob(id);
+  editingAttachments = editingAttachments.filter(a => a.id !== id);
+  renderAttachments();
+}
+
+// ─── SAVE ───────────────────────────────────────────────────────
+async function savePost() {
+  if (!activePostId) return;
+  const idx = POSTS.findIndex(p => p.id === activePostId);
+  if (idx === -1) return;
+  POSTS[idx] = {
+    ...POSTS[idx],
+    title: document.getElementById('edit-title').value.trim() || POSTS[idx].title,
+    body: document.getElementById('edit-body').value,
+    status: document.getElementById('edit-status').value,
+    publishDate: document.getElementById('edit-date').value,
+    publishTime: document.getElementById('edit-time').value,
+    source: document.getElementById('edit-source').value,
+    tags: [...editingTags],
+    designInstructions: document.getElementById('edit-design').value,
+    attachments: [...editingAttachments]
+  };
+  await savePosts();
+  renderStats();
+  renderCalendar();
+  closeModal();
+  if (!fileHandle) showToast('Post saved locally');
+}
+
+// ─── COPY ───────────────────────────────────────────────────────
+function copyPost() {
+  const body = document.getElementById('edit-body').value;
+  navigator.clipboard.writeText(body).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy Post', 2000);
+  });
+}
+
+// ─── DELETE ─────────────────────────────────────────────────────
+function confirmDelete() { document.getElementById('confirm-overlay').classList.add('open'); }
+function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('open'); }
+async function deletePost() {
+  POSTS = POSTS.filter(p => p.id !== activePostId);
+  await savePosts();
+  closeConfirm();
+  closeModal();
+  renderStats();
+  renderCalendar();
+  renderPostList();
+  showToast('Post deleted');
+}
+
+// ─── NEW POST ───────────────────────────────────────────────────
+async function newPost() {
+  const newId = String(Date.now());
+  const today = formatDate(new Date());
+  POSTS.push({
+    id: newId, title: 'New Post', body: '', status: 'draft',
+    publishDate: today, publishTime: '09:00', source: '', tags: [], designInstructions: '', attachments: []
+  });
+  await savePosts();
+  renderStats(); renderCalendar(); renderPostList();
+  openPost(newId);
+}
+
+// ─── EXPORT JSON ────────────────────────────────────────────────
+function exportJSON() {
+  if (fileHandle) { savePosts(); return; }
+  const blob = new Blob([JSON.stringify(POSTS, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'posts.json';
+  a.click();
+  showToast('posts.json downloaded');
+}
+
+// ─── MAIN TAB SWITCH ────────────────────────────────────────────
+function switchMainTab(tab, el) {
+  document.querySelectorAll('.main-nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if (tab === 'calendar') {
+    document.getElementById('view-calendar').style.display = 'block';
+    document.getElementById('view-progress').style.display = 'none';
+  } else {
+    document.getElementById('view-calendar').style.display = 'none';
+    document.getElementById('view-progress').style.display = 'block';
+    renderProgress();
+  }
+}
+
+// ─── PROGRESS DATA ───────────────────────────────────────────────
+const PROGRESS_KEY = 'linkedin_progress';
+const CHECKIN_KEY = 'linkedin_progress_checkin';
+let PROGRESS = [];
+let checkinMonth = null;
+
+function loadProgress() {
+  try {
+    const saved = localStorage.getItem(PROGRESS_KEY);
+    PROGRESS = saved ? JSON.parse(saved) : [];
+  } catch(e) { PROGRESS = []; }
+  // Seed February 2026 if not already present
+  if (!PROGRESS.find(p => p.month === '2026-02')) {
+    PROGRESS.unshift({ month: '2026-02', posts: 0, followers: 4763, impressions: 0 });
+    saveProgress();
+  }
+}
+
+function saveProgress() {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(PROGRESS));
+}
+
+// ─── MONTHLY CHECK-IN ────────────────────────────────────────────
+function checkMonthlyPrompt() {
+  const lastCheckin = localStorage.getItem(CHECKIN_KEY) || '';
+  const now = new Date();
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthStr = `${prevDate.getFullYear()}-${String(prevDate.getMonth()+1).padStart(2,'0')}`;
+  // Prompt if we haven't logged last month yet
+  if (lastCheckin !== prevMonthStr && !PROGRESS.find(p => p.month === prevMonthStr)) {
+    checkinMonth = prevMonthStr;
+    setTimeout(() => openCheckin(), 900);
+  }
+}
+
+function openCheckin(monthStr) {
+  if (monthStr) checkinMonth = monthStr;
+  if (!checkinMonth) {
+    const now = new Date();
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    checkinMonth = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}`;
+  }
+  const [y, m] = checkinMonth.split('-');
+  const label = new Date(parseInt(y), parseInt(m)-1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  document.getElementById('checkin-subtitle').innerHTML = `How did <strong>${label}</strong> go?`;
+  // Pre-fill followers from most recent known entry
+  const latest = [...PROGRESS].sort((a,b) => b.month.localeCompare(a.month))[0];
+  document.getElementById('ci-posts').value = '';
+  document.getElementById('ci-impressions').value = '';
+  document.getElementById('ci-followers').value = latest ? latest.followers : '';
+  document.getElementById('checkin-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('ci-posts').focus(), 100);
+}
+
+function closeCheckin() {
+  document.getElementById('checkin-overlay').classList.remove('open');
+  if (checkinMonth) localStorage.setItem(CHECKIN_KEY, checkinMonth);
+  checkinMonth = null;
+}
+
+function saveCheckin() {
+  const posts = parseInt(document.getElementById('ci-posts').value) || 0;
+  const impressions = parseInt(document.getElementById('ci-impressions').value) || 0;
+  const followers = parseInt(document.getElementById('ci-followers').value) || 0;
+  const month = checkinMonth;
+  const idx = PROGRESS.findIndex(p => p.month === month);
+  if (idx >= 0) { PROGRESS[idx] = { month, posts, followers, impressions }; }
+  else { PROGRESS.push({ month, posts, followers, impressions }); PROGRESS.sort((a,b) => a.month.localeCompare(b.month)); }
+  saveProgress();
+  localStorage.setItem(CHECKIN_KEY, month);
+  document.getElementById('checkin-overlay').classList.remove('open');
+  checkinMonth = null;
+  renderProgress();
+  showToast('Monthly stats saved ✓');
+}
+
+// ─── RENDER PROGRESS ─────────────────────────────────────────────
+function renderProgress() {
+  const sorted = [...PROGRESS].sort((a,b) => b.month.localeCompare(a.month));
+  const latest = sorted[0];
+  const prev = sorted[1];
+
+  // Summary cards
+  if (latest) {
+    const fDiff = prev ? latest.followers - prev.followers : null;
+    const iDiff = prev ? latest.impressions - prev.impressions : null;
+    document.getElementById('progress-summary').innerHTML = `
+      <div class="metric-card">
+        <div class="metric-label">Followers</div>
+        <div class="metric-value">${latest.followers.toLocaleString()}</div>
+        <div class="metric-growth ${fDiff === null ? 'growth-neu' : fDiff > 0 ? 'growth-pos' : fDiff < 0 ? 'growth-neg' : 'growth-neu'}">
+          ${fDiff === null ? 'No prior month' : (fDiff >= 0 ? '+' : '') + fDiff.toLocaleString() + ' vs last month'}
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Impressions</div>
+        <div class="metric-value">${latest.impressions.toLocaleString()}</div>
+        <div class="metric-growth ${iDiff === null ? 'growth-neu' : iDiff > 0 ? 'growth-pos' : iDiff < 0 ? 'growth-neg' : 'growth-neu'}">
+          ${iDiff === null ? 'No prior month' : (iDiff >= 0 ? '+' : '') + iDiff.toLocaleString() + ' vs last month'}
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Posts Published</div>
+        <div class="metric-value">${latest.posts}</div>
+        <div class="metric-growth growth-neu">${monthLabel(latest.month)}</div>
+      </div>
+    `;
+  } else {
+    document.getElementById('progress-summary').innerHTML = '';
+  }
+
+  // Table rows (most recent first)
+  const rows = sorted.map((entry, i) => {
+    const prevEntry = sorted[i + 1];
+    const fDiff = prevEntry != null ? entry.followers - prevEntry.followers : null;
+    const fPct = prevEntry && prevEntry.followers ? ((fDiff / prevEntry.followers) * 100).toFixed(1) : null;
+    const iDiff = prevEntry != null ? entry.impressions - prevEntry.impressions : null;
+    const iPct = prevEntry && prevEntry.impressions ? ((iDiff / prevEntry.impressions) * 100).toFixed(1) : null;
+    return `<tr>
+      <td class="month-cell">${monthLabel(entry.month)}</td>
+      <td>${entry.posts}</td>
+      <td>${entry.followers.toLocaleString()}</td>
+      <td>${fDiff !== null ? growthBadge(fDiff, fPct) : '<span style="color:#ccc">—</span>'}</td>
+      <td>${entry.impressions.toLocaleString()}</td>
+      <td>${iDiff !== null ? growthBadge(iDiff, iPct) : '<span style="color:#ccc">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('progress-tbody').innerHTML = rows ||
+    `<tr><td colspan="6" style="text-align:center;color:#aaa;padding:28px;font-size:14px;">No data yet — click "Log Month" to get started.</td></tr>`;
+}
+
+function growthBadge(diff, pct) {
+  if (diff === 0) return `<span class="growth-badge badge-flat">0</span>`;
+  const cls = diff > 0 ? 'badge-up' : 'badge-down';
+  const sign = diff > 0 ? '+' : '';
+  const pctStr = pct !== null && parseFloat(pct) !== 0 ? ` (${sign}${pct}%)` : '';
+  return `<span class="growth-badge ${cls}">${sign}${diff.toLocaleString()}${pctStr}</span>`;
+}
+
+function monthLabel(monthStr) {
+  const [y, m] = monthStr.split('-');
+  return new Date(parseInt(y), parseInt(m)-1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+// ─── TOAST ──────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>

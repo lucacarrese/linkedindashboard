@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__figma__generate_figma_design",
+      "Bash(open \"http://localhost:3000/claude-code-57-second-campaign-2026-03-23.html#figmacapture=d904fcf8-5b5d-4e4c-b488-2ed6a2fed275&figmaendpoint=https%3A%2F%2Fmcp.figma.com%2Fmcp%2Fcapture%2Fd904fcf8-5b5d-4e4c-b488-2ed6a2fed275%2Fsubmit&figmadelay=1000\")",
+      "Bash(open \"http://localhost:3000/record-your-workday-claude-code-2026-03-23.html#figmacapture=83d921db-36dd-4e1e-91b6-cdf097774ee0&figmaendpoint=https%3A%2F%2Fmcp.figma.com%2Fmcp%2Fcapture%2F83d921db-36dd-4e1e-91b6-cdf097774ee0%2Fsubmit&figmadelay=1000\")",
+      "Bash(open \"http://localhost:3000/linkedin-banner.html#figmacapture=0389e460-75bf-44f1-bf7d-68a319ace760&figmaendpoint=https%3A%2F%2Fmcp.figma.com%2Fmcp%2Fcapture%2F0389e460-75bf-44f1-bf7d-68a319ace760%2Fsubmit&figmadelay=1500\")",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "Bash(python3 -c \"import sys,json; print\\(json.load\\(sys.stdin\\)\\)\")",
+      "Bash(curl -s http://localhost:3000/api/strategist)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'{len\\(d\\)} strategist skill\\(s\\): {[s[\\\\\"name\\\\\"] for s in d]}'\\)\")"
+    ]
+  }
+}

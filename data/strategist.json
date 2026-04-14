@@ -1,0 +1,11 @@
+[
+  {
+    "id": "test_1",
+    "name": "Test Skill",
+    "category": "strategy",
+    "icon": "🧠",
+    "desc": "test",
+    "content": "# Test\nThis works.",
+    "updatedAt": "2026-04-14"
+  }
+]
