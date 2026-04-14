@@ -8,15 +8,17 @@ All work stays within: `/Users/lucafelix/Desktop/claude projects /Linkedin /`
 
 ## Workflow
 1. Receive source material (transcript, notes, URL, or topic)
-2. Read `/examples/_patterns.md` to load the structural rules and voice
-3. Extract key topics, use cases, insights, and specific data points
-4. Identify which body structure pattern (A/B/C/D) fits the content
-5. Find 1-2 relevant example posts in `/examples/` that match the format — mirror their rhythm
-6. Draft posts following the writing rules in `/context/audience_and_tone.md`
-7. Save final posts to `/posts/` with a descriptive filename
-8. **Generate a design brief** for every post saved — write it to `/designer/briefs/[post-filename]-brief.md` using the template at `/designer/briefs/_template.md`. Fill in: post content, hook, tone, layout type, key visual message, dominant element, color mood.
+2. **Read `/skills/anti-ai-writing-style.md` first** — this overrides all default writing instincts
+3. Read `/examples/_patterns.md` to load the structural rules and voice
+4. Extract key topics, use cases, insights, and specific data points
+5. Identify which body structure pattern (A/B/C/D) fits the content
+6. Find 1-2 relevant example posts in `/examples/` that match the format — mirror their rhythm
+7. Draft posts following the writing rules in `/context/audience_and_tone.md`
+8. Save final posts to `/posts/` with a descriptive filename
+9. **Generate a design brief** for every post saved — write it to `/designer/briefs/[post-filename]-brief.md` using the template at `/designer/briefs/_template.md`. Fill in: post content, hook, tone, layout type, key visual message, dominant element, color mood.
 
 ## Key Rules
+- **Read `/skills/anti-ai-writing-style.md` before every draft** — this is the primary writing filter
 - **Read `/examples/_patterns.md` before every draft** — structure and voice come from there
 - Never start a post with "I"
 - Always lead with a strong hook containing a specific number
@@ -53,6 +55,7 @@ It will generate an HTML mockup and push it automatically to Figma.
 - **Style guide**: `/designer/examples/style_guide.md` — fill this in with your brand colors/fonts
 
 ## Skills Available
+- `anti-ai-writing-style.md` — **Read first.** Rules for writing that sounds human, not AI-generated
 - `analyze_transcript.md` — How to extract post ideas from a transcript
 - `add_post_to_dashboard.md` — How to save posts to the dashboard
 - `post_structure.md` — Post formats and hook types

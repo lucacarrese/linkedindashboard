@@ -105,6 +105,7 @@ app.get('/api/skills', (req, res) => {
   const skills = [];
 
   const SKILL_META = {
+    'anti-ai-writing-style.md':{ name: 'Anti-AI Writing Style',     icon: '🚫', category: 'writing',  desc: 'Read this first. Rules for writing that sounds human, not AI-generated.' },
     'analyze_transcript.md':   { name: 'Analyze Transcript',        icon: '📝', category: 'content',  desc: 'Extract post ideas from webinars, interviews, or meeting transcripts.' },
     'add_post_to_dashboard.md':{ name: 'Add Post to Dashboard',     icon: '➕', category: 'workflow', desc: 'Save a finalized post to posts.json and the dashboard.' },
     '_patterns.md':             { name: 'Post Patterns & Structure', icon: '✍️', category: 'writing',  desc: 'Hook formulas, body structure patterns (A/B/C/D), and CTA types.' },
