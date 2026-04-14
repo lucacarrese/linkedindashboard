@@ -1,0 +1,13 @@
+{
+  "name": "coldiq-content-hub",
+  "version": "2.0.0",
+  "description": "ColdIQ LinkedIn Content Hub",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

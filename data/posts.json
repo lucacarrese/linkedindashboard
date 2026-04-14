@@ -1,0 +1,361 @@
+[
+  {
+    "id": "001",
+    "title": "Claude Code for GTM — 3 Workflows",
+    "body": "Claude Code hype is real. \n\nHere are 3 GTM flows we launched this year at our $7M ARR company: \n\nWhy is Claude code trending right now? \n\nNot because it writes code for you.\n\nBecause it lets non-technical GTM teams build autonomous workflows that used to require a full engineering sprint.\n\nHere some examples: \n\n1.End-to-End Outbound Campaign Builder\n\n- Upload a CSV of companies\n\n- Claude Code tiers them into Tier 1/2/3 using your ICP scoring criteria (pure logic — no AI hallucinations)\n\n- Finds the right contacts via Apollo's API\n\n- Enriches missing emails through secondary providers\n\n- Generates personalized sequences from your saved copy frameworks\n\n- Pushes the full campaign live into Instantly\n\n2. LinkedIn Engagement → Outbound Pipeline\n\n- Scrapes everyone who likes or comments on your LinkedIn posts\n\n- Runs ICP scoring + CRM de-duplication automatically\n\n- Finds their work email via enrichment providers\n\n- Routes qualified leads into an outbound sequence\n\n- Runs weekly on autopilot, no one presses a button\n\nBonus: extend it to monitor competitor posts and keyword-based content. \nAnyone posting about your category enters your pipeline. \nOne team replaced $300+/month in scraping tools with this single agent.\n\n3. Ad Campaign Builder Across LinkedIn, Meta & Google\n\n- Fill in a Google Sheet: campaign name, targeting, ad copy, landing page\n\n- Run one prompt in Claude Code\n\n- It calls the LinkedIn/Meta/Google Ads API automatically\n\n- Pulls the right creatives from Google Drive\n\n- Launches the campaign across platforms\n\nA full campaign that used to take 30+ minutes in the UI now takes under 2 minutes without touching a single dashboard.\n\nThe real unlock isn't any single workflow.\n\nIt's that your scoring criteria, copy frameworks, and past campaign data all live in one place \n\nand compound every time you run a new campaign.\n\nWhich of these three would have the biggest impact on your GTM motion right now?",
+    "status": "posted",
+    "publishDate": "2026-03-09",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Kenny & Ivan",
+    "tags": [
+      "GTM",
+      "Claude Code"
+    ],
+    "designInstructions": "ONE-PAGER\n\nHEADLINE (top, centered): '3 GTM Motion with Claude Code.' Bold, large.\n\n\nHORIZONTAL FLOW — 3 equal columns connected by arrows (→):\n\n[ Outbound Campaign Builder ] → [ LinkedIn Engagement Pipeline ] → [ Ad Campaign Builder ]\n\nChildren below each column:\n\nCol 1 — Outbound Campaign Builder:\n• Upload CSV of companies\n• ICP scoring → Tier 1/2/3\n• Find contacts via Apollo\n• Enrich emails\n• Generate sequences\n• Push to Instantly\n\nCol 2 — LinkedIn Engagement Pipeline:\n• Scrape post engagers\n• Enrich in Clay\n• ICP score + de-dup\n• Find work emails\n• Route to outbound sequence\n• Runs weekly on autopilot\n\nCol 3 — Ad Campaign Builder:\n• Fill Google Sheet\n• Run one prompt\n• Calls LinkedIn/Meta/Google APIs\n• Pulls creatives from Drive\n• Campaign live in under 2 min\n\n",
+    "attachments": [
+      {
+        "id": "att_1772818037924_pibmz",
+        "name": "3 GTM Motion Claude Code.jpg",
+        "type": "image/jpeg",
+        "size": 8779391
+      }
+    ]
+  },
+  {
+    "id": "002",
+    "title": "LinkedIn Ad Campaign Builder",
+    "body": "Building a full LinkedIn ad campaign used to take me 30+ minutes of fighting the UI.\n\nNow it takes under 2 minutes. I don't touch LinkedIn's campaign manager at all.\n\nHere's what I built with Claude Code:\n\nA Google Sheet where I fill in:\n• Campaign name\n• Targeting criteria (ABM list, job titles, bottom of funnel, etc.)\n• Ad copy reference\n• Landing page + CTA\n\nThen I run one prompt in Claude Code. It reads the sheet, calls the LinkedIn Ads API, pulls the right ad creative from Google Drive, and creates the campaign live.\n\nI built the same thing for Meta Ads and Google Ads.\n\nNo MCP server exists for LinkedIn Ads, so I fed Claude Code the API docs, let it figure out the right calls, and saved the working scripts as reusable \"skills.\"\n\nWe now manage hundreds of thousands in ad spend this way across all three platforms.\n\nThe craziest part? I'm not a developer. I did this in plan mode, one prompt at a time.\n\nIf you're running paid ads at scale and still manually building campaigns in the UI — what would you automate first if you had this?",
+    "status": "missing-visual",
+    "publishDate": "2026-03-30",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Ivan (Head of Growth)",
+    "tags": [
+      "Paid Ads",
+      "LinkedIn Ads",
+      "Claude Code",
+      "AI"
+    ],
+    "designInstructions": "\nHEADLINE (top, centered): 'From 30 minutes to 2 minutes.' Bold, very large.\nSUBHEAD: 'How I build full ad campaigns with Claude Code.' Grey, smaller.\n\nHORIZONTAL FLOW — 4 nodes connected by arrows (→):\n\n[ Google Sheet ] → [ Claude Code ] → [ APIs Called ] → [ Campaign Live ]\n\nChildren below each node:\n\nNode 1 — Google Sheet:\n• Campaign name\n• Targeting criteria\n• Ad copy reference\n• Landing page + CTA\n\nNode 2 — Claude Code:\n• Reads the sheet\n• Calls platform APIs\n• Pulls creatives from Drive\n• No manual UI work\n\nNode 3 — APIs Called:\n• LinkedIn Ads API\n• Meta Ads API\n• Google Ads API\n\nNode 4 — Campaign Live:\n• Correct targeting set\n• Ad creatives mapped\n• Ready to serve\n• Under 2 minutes total\n\nFOOTER: 'Hundreds of thousands in ad spend managed this way.' Grey italic.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "004",
+    "title": "Full Outbound Campaign in 20 Minutes",
+    "body": "153 contacts. Enriched emails. Personalized copy. Live campaign in Instantly.\n\nAll from a CSV — without opening Clay, writing a formula, or copy-pasting anything.\n\nHere's the exact flow I built in Claude Code:\n\nStep 1 — Score your list\nUpload companies. Claude Code reads your ICP scoring criteria and tiers every company into Tier 1/2/3 using Python. Zero AI hallucination risk — pure logic on raw data.\n\nStep 2 — Find contacts\n\"Find me sales leaders at Tier 1 and Tier 2 companies.\" Claude Code calls the Apollo API. 153 contacts in ~90 seconds.\n\nStep 3 — Enrich emails\nMissing emails get filled via secondary enrichment providers. 149 of 153 came back verified.\n\nStep 4 — Write copy\nClaude Code reads your saved copy frameworks and generates personalized sequences with conditional logic by persona/industry.\n\nStep 5 — Push to Instantly\nCampaign appears live — fully loaded with leads and sequences.\n\nThe biggest unlock isn't speed. It's that your scoring criteria, copy frameworks, and campaign history compound over time in one place.\n\nWhat part of your outbound workflow still requires the most manual effort?",
+    "status": "missing-visual",
+    "publishDate": "2026-04-01",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Kenny (Head of GTM)",
+    "tags": [
+      "Outbound",
+      "Cold Email",
+      "Claude Code",
+      "GTM",
+      "Apollo"
+    ],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue (#0A66C2) accents.\n\nHEADLINE (top, centered): '153 contacts. Enriched. Live campaign. 20 minutes.' Bold, large.\nSUBHEAD: 'The exact 5-step flow built inside Claude Code.' Grey, smaller.\n\nHORIZONTAL FLOW — 5 nodes connected by arrows (→):\n\n[ Score List ] → [ Find Contacts ] → [ Enrich Emails ] → [ Write Copy ] → [ Push to Instantly ]\n\nChildren below each node:\n\nNode 1 — Score List:\n• Upload CSV of companies\n• Reads scoring criteria file\n• Tiers into T1 / T2 / T3\n• Pure Python — no AI errors\n\nNode 2 — Find Contacts:\n• Apollo API called automatically\n• Targets sales leaders at T1+T2\n• 153 contacts in ~90 seconds\n\nNode 3 — Enrich Emails:\n• Secondary providers called\n• Lead Magic, Blitz API\n• 149 of 153 emails verified\n\nNode 4 — Write Copy:\n• Reads copy-framework file\n• Personalized by persona/industry\n• Conditional logic applied\n\nNode 5 — Push to Instantly:\n• Campaign created via API\n• Leads + sequences loaded\n• Live — no manual steps\n\nFOOTER: 'No Clay. No copy-pasting. No tab-switching.' Grey italic.\nLOGO: bottom-right corner."
+  },
+  {
+    "id": "005",
+    "title": "Boris Cherny's 8 Claude Code Tips",
+    "body": "The creator of Claude Code just shared how his own team uses it.\n\nHere are the 8 tips that actually matter:\n\n1. Run tasks in parallel\nSpin up 3-5 git worktrees at once, each running its own Claude session. It's the single biggest productivity unlock — hop between them in one keystroke.\n\n2. Always start complex tasks in plan mode\nPour your energy into the plan so Claude can 1-shot the implementation. One person writes the plan, a second Claude reviews it as a staff engineer.\n\n3. Invest in your CLAUDE.md\nAfter every correction, end with: \"Update your CLAUDE.md so you don't make that mistake again.\" Keep iterating until Claude's mistake rate measurably drops.\n\n4. Build your own skills\nIf you do something more than once a day, turn it into a reusable skill or command. Commit them to git and reuse across every project.\n\n5. Let Claude fix its own bugs\nEnable the Slack MCP, paste a thread, and say \"fix.\" Point it at Docker logs. Just say \"Go for the failing CI tests.\" Don't micromanage — it's surprisingly capable.\n\n6. Prompt like you mean it\n• Say \"Grill me on these changes and don't make a PR until I pass your test\"\n• After a mediocre fix: \"Knowing everything you know now, scrap this and implement the elegant solution\"\n• Write detailed specs. The more specific, the better the output.\n\n7. Use subagents\nOffload individual tasks to subagents to keep your main context window clean. For complex problems, run 5+ at once in parallel.\n\n8. Use it for data & analytics\nAsk Claude to use the bq CLI to pull and analyze metrics on the fly. The team hasn't written a line of SQL in 6+ months.\n\nThere's no one right way to use Claude Code.\n\nBut if the team that built it is doing all of the above — that's a pretty good place to start.\n\nWhich of these are you not doing yet?",
+    "status": "missing-visual",
+    "publishDate": "2026-04-27",
+    "publishTime": "09:00",
+    "source": "Boris Cherny — Instagram Screenshots",
+    "tags": [
+      "Claude Code",
+      "AI",
+      "Productivity"
+    ],
+    "designInstructions": "Caroussel style. \n\n1st page: HEADLINE (top, centered): 'The creator of Claude Code shared 8 tips his team actually uses.' Bold, large.\n\neach tip card (one line each):\n01 Parallel Work — Spin up 3-5 worktrees at once. Biggest productivity unlock.\n02 Plan Mode — Pour energy into the plan. Claude 1-shots the execution.\n03 CLAUDE.md — After every mistake, update it. Mistake rate drops over time.\n04  Build Skills — If you do it twice, make it a skill. Commit and reuse.\n05 Self-Fix Bugs— Paste the Slack thread. Say 'fix.' Don't micromanage.\n06 Better Prompts  — Write detailed specs. Challenge Claude to earn the PR.\n07 Subagents — Offload tasks. Run 5+ in parallel for complex problems.\n08 Data & Analytics— Use bq CLI. Zero SQL written in 6+ months.\n\nFOOTER: 'Source: Boris Cherny, Creator of Claude Code.' \nLOGO: bottom-right corner.",
+    "attachments": []
+  },
+  {
+    "id": "006",
+    "title": "Claude Code as a GTM Operating System",
+    "body": "Most people use AI like a smarter Google search.\n\nThe teams winning right now are using it as an operating system for their entire GTM motion.\n\nInside Claude Code, you maintain a folder that acts as the brain of your operation:\n\n• CLAUDE.md — instructions and context for every agent\n• Scoring criteria — how you tier your ICP\n• Copy frameworks — email structures that are already converting\n• API docs — so Claude never has to re-learn your tools\n• Skills — reusable scripts saved every time a workflow succeeds\n\nBefore this, my copy frameworks were in Google Docs. My scoring was in Clay. My leads were in Apollo. My campaigns were in Instantly. Nothing talked to each other.\n\nNow one prompt orchestrates the entire process.\n\nI'm managing 10+ client campaigns simultaneously this way.\n\nThe teams that build this infrastructure early will have a compounding advantage that's very hard to catch up with.\n\nAre you building your GTM context to compound — or starting from scratch every campaign?",
+    "status": "missing-visual",
+    "publishDate": "2026-05-04",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Kenny (Head of GTM)",
+    "tags": [
+      "GTM",
+      "Claude Code",
+      "AI",
+      "Outbound",
+      "Strategy"
+    ],
+    "designInstructions": "\nHEADLINE (top, centered): 'One prompt. Every tool. All connected.' Bold, large.\nSUBHEAD: 'This is what a Claude Code GTM operating system looks like.' Grey, smaller.\n\nHORIZONTAL FLOW — 3 sections connected by arrows (→):\n\n[ Your Prompt ] → [ Claude Code Brain ] → [ Tools Orchestrated ]\n\nChildren below each section:\n\nSection 1 — Your Prompt:\n• 'Run campaign for [Client X]'\n• One sentence, natural language\n• No tabs, no copy-pasting\n\nSection 2 — Claude Code Brain (center, larger box, blue border highlight):\n• CLAUDE.md — agent instructions\n• Scoring Criteria — ICP tiers\n• Copy Frameworks — proven email formulas\n• API Docs — tool references\n• Skills — reusable saved scripts\n\nSection 3 — Tools Orchestrated:\n• Apollo — contact sourcing\n• Clay — enrichment\n• Instantly — campaign creation\n• LinkedIn Ads — ad targeting\n• Railway — deployment\n\nFOOTER: 'Managing 10+ client campaigns simultaneously this way.' Grey italic.\nLOGO: bottom-right corner.",
+    "attachments": []
+  },
+  {
+    "id": "008",
+    "title": "Claude Code vs Claude Cowork — What's the Difference?",
+    "body": "Anthropic has two of the hottest agentic products right now.\n                                                                                                                                                                                                                      \nMost people don't know the difference or that both exist.\n\n Here's the breakdown:\n\nClaude Code -> The Agent for Builders\n\nWhat it is: A terminal-based agent that lives on your machine and operates like a technical co-founder.\n\n  What it can do:\n  - Reads and writes files directly on your system — no uploads\n  - Runs commands, tests, and creates pull requests\n  - Builds reusable skills and automated workflows\n  - Runs Agent Teams: multiple agents that communicate with each other, share discoveries, and coordinate tasks in parallel\n  - Stores all memory and context locally — you own everything\n  - Deploys autonomous agents via Railway and N8N that run 24/7\n\n  What it can't do:\n  - Run without a terminal — there is no GUI\n  - Generate formatted Excel or PowerPoint natively\n  - Schedule recurring tasks without extra setup\n\n  Who it's for: Developers, GTM operators, growth teams. Any non-technical person willing to spend a day learning the basics. The ceiling is very high.\n\nClaude Cowork -> The Agent for Knowledge Workers\n\nWhat it is: A desktop app that brings agentic capabilities to business teams — no terminal required.\n\nWhat it can do:\n  - Accesses local files directly without manual uploads\n  - Breaks complex tasks into sub-tasks and runs them in parallel inside an isolated VM\n  - Generates formatted Excel spreadsheets, PowerPoint presentations, and polished documents\n  - Schedules and runs recurring tasks automatically\n  - Connects natively to Google Drive, Gmail, Calendar, DocuSign, Apollo, Clay, Outreach, and 10+ tools via MCP\n  - Runs as an add-in directly inside Microsoft Excel and PowerPoint\n\n  What it can't do:\n  - Build persistent agents or reusable skills like Claude Code\n  - Integrate with developer workflows or run in a terminal\n  - Store conversation history in audit logs — it's local only\n\n  Who it's for: Business, ops, and knowledge workers who need autonomous task execution without touching a terminal.\n\nSame AI. Completely different use cases.\n\nClaude Code builds the system.\nClaude Cowork runs the work.\n\nIf you're in GTM, sales, or growth, Claude Code gives you the higher ceiling.\nIf you're in ops, finance, or management, Cowork gets you there faster.\n\nWhich one fits your day-to-day?\n",
+    "status": "posted",
+    "publishDate": "2026-03-13",
+    "publishTime": "09:00",
+    "source": "Web Research — Claude Help Center, VentureBeat, Anthropic Blog",
+    "tags": [
+      "Claude Code",
+      "Claude Cowork",
+      "AI"
+    ],
+    "designInstructions": "\n\nHEADLINE (top, centered): 'Claude Code vs Claude Cowork Bold, large.\nSUBHEAD: 'Here is exactly what each one does and who should use it.' \n\nHORIZONTAL LAYOUT — 2 equal columns side by side, thin vertical divider between them. No arrows — parallel comparison.\n\n[ Claude Code ] | [ Claude Cowork ]\n\nCol 1 — Claude Code:\nIcon: terminal brackets\nSubtitle: 'The Agent for Builders'\nCAN DO:\n• Reads + writes files directly on your system\n• Runs commands, tests, pull requests\n• Builds reusable skills + workflows\n• Agent Teams coordinate in parallel\n• Deploys 24/7 via Railway + N8N\nCAN'T DO:\n• No GUI — terminal only\n• No native Excel/PowerPoint output\nBottom tag: FOR: GTM, Dev & Growth Teams\n\nCol 2 — Claude Cowork:\nIcon: desktop window\nSubtitle: 'The Agent for Knowledge Workers' \nCAN DO:\n• Desktop app — no terminal needed\n• Runs tasks in isolated VM\n• Generates Excel, PowerPoint, reports\n• Scheduled recurring tasks\n• Native connectors: Drive, Gmail, Apollo, Clay + 10 more\nCAN'T DO:\n• No persistent agents or reusable skills\n• No dev workflow integration\nBottom tag: FOR: Ops, Finance & Business Teams\n\nFOOTER: 'Claude Code builds the system. Claude Cowork runs the work.' White italic.\n",
+    "attachments": [
+      {
+        "id": "att_1772733805468_n75lw",
+        "name": "Claudecode vs claude coworka.jpg",
+        "type": "image/jpeg",
+        "size": 5108328
+      }
+    ]
+  },
+  {
+    "id": "007",
+    "title": "Running Autonomous GTM Agents 24/7",
+    "body": "1 claude code agent replaced $300/month tool\nIt runs our full linkedin engagement pipeline\n\nOur outbound agents don't sleep.\n\nEvery week,  Claude Code:\n\n→ Scrapes engagement from our team's LinkedIn posts \n→ Enriches the leads\n→ routes them into outbound sequences.\n\nHere's how we made it autonomous:\n\nThe agent = just a folder. A script, a prompt, a requirements file.\nClaude Code isn't magic, it's organized code you don't have to write yourself.\n\nRailway = where we deploy it. Once live, it runs on its own schedule, 24/7.\n\nN8N = for complex multi-step orchestration alongside Railway.\n\nThe result for our social engager:\n→ Monitors all team LinkedIn posts weekly\n→ Scrapes every new engager\n→ Enriches and qualifies against ICP\n→ Routes into Instantly or flags in Slack for SDRs\n\nWe also monitor keyword-based content\nAnyone engaging with \"go-to-market\" or \"ABM\" gets pulled into our targeting pool.\n\nOnce a workflow succeeds, you save it as a skill\n↳ Reusable script Claude Code can call anytime.\n\nMost people think Claude Code is for one-off tasks. \nThe real unlock is deploying it as infrastructure that runs your GTM motion while you sleep.\n\nWhat would you automate first if your agents could run 24/7?",
+    "status": "missing-visual",
+    "publishDate": "2026-04-13",
+    "publishTime": "09:00",
+    "source": "Coldiq Webinar — Ivan (Head of Growth)",
+    "tags": [
+      "GTM",
+      "Claude Code",
+      "AI",
+      "Automation",
+      "Railway"
+    ],
+    "designInstructions": "\nHEADLINE (top, centered): 'Our outbound agents don't sleep.' Bold, large.\nSUBHEAD: 'The autonomous pipeline running 24/7 without anyone pressing a button.' Grey, smaller.\n\nHORIZONTAL FLOW — 5 nodes connected by arrows (→):\n\n[ LinkedIn Posts ] → [ Scrape Engagers ] → [ Enrich & Score ] → [ Route Leads ] → [ Deploy on Railway ]\n\nChildren below each node:\n\nNode 1 — LinkedIn Posts:\n• All team posts monitored weekly\n• Likes, comments, shares tracked\n• Competitor posts also scraped\n• Keyword posts monitored (e.g. 'ABM')\n\nNode 2 — Scrape Engagers:\n• Scraping API pulls all engagers\n• Name, profile, company captured\n• Runs automatically — no trigger\n\nNode 3 — Enrich & Score:\n• Clay enrichment applied\n• ICP scoring + CRM de-dup\n• Blocklist check\n• Work email found\n\nNode 4 — Route Leads:\n• Qualified → Instantly sequence\n• Flagged → Slack alert for SDR\n• Audiences → LinkedIn Ads targeting\n\nNode 5 — Deploy on Railway:\n• Agent = folder + script + prompt\n• Scheduled via Railway + N8N\n• Zero maintenance after setup\n\nFOOTER: 'Once a workflow works, save it as a skill. It runs forever.' Grey italic.\nLOGO: bottom-right corner.",
+    "attachments": []
+  },
+  {
+    "id": "1772574746341",
+    "title": "AI Workforce vs AI Tools — The Shift Happening Now",
+    "body": "89% of corporate leaders say AI will reshape jobs in 2026\n\nWorkers with AI skills command salaries 56% higher than peers in identical roles without those skills.\n\nThe market is shifting from single-task AI to full AI workforces.\n\nThis is not about chatbots or copilots anymore. Companies like Canva, Autodesk, and KPMG are deploying teams of AI agents that work autonomously across entire operations.\n\nThe difference between hiring one AI tool and building an AI workforce:\n\n→ One AI tool automates a single task\n\n→ An AI workforce automates entire workflows\n\nRevOps teams are building AI agents instead of hiring for three reasons.\n\n1️⃣ 92% of companies are increasing AI investments over the next three years, according to McKinsey's 2025 report. \n\nThe budget is moving from headcount to infrastructure.\n\n2️⃣ AI agents can be deployed in minutes using no-code platforms. \nYou can scale on demand without hiring or training new team members.\n\n3️⃣ Workers who adopt AI save an average of 7.5 hours per week, according to research from the London School of Economics. \n\nThat time goes back into strategy and relationship building.\n\n@Relevance AI positioned itself as the home of the AI workforce. \n\nTheir no-code platform lets ops teams build and manage entire AI workforces without technical backgrounds.\n\nCompanies using @Relevance AI achieved 3,000% ROI by deploying AI agents across sales, support, and research functions, according to a MongoDB case study.\n\n- Here is what an AI workforce looks like in practice:\n\n→ Sales teamsdeploy AI agents that research prospects, draft personalized outreach, and book meetings 24/7. Human reps focus on closing deals.\n\n→ Support teams deploy AI agents that triage tickets, draft responses based on knowledge bases, and escalate complex issues to humans. Response times drop, satisfaction rises.\n\n→ RevOps teams deploy AI agents that process data, generate reports, and update CRMs automatically. Ops leaders shift from data entry to decision-making.\n\nThe shift from copilots to autonomous agents is happening now. \n\nBy 2030, every team will have full AI workforces supporting them, not just AI assistants.\n\n@Relevance AI raised $37.2M from investors including Insight Partners and Galileo Ventures to build the infrastructure for this shift.\n\nFull breakdown below 👇\n\n",
+    "status": "posted",
+    "publishDate": "2026-03-11",
+    "publishTime": "09:00",
+    "source": "Monika",
+    "tags": [
+      "AI Workforce",
+      "Outbound"
+    ],
+    "designInstructions": "ONE-PAGER. Light background (#F3F2EF). Dark text. Bold accent color: deep blue or purple for 'AI Workforce' label.\n\nHEADLINE (top, centered): 'The shift from AI tools to AI workforces is happening now.' Bold, large, dark.\nSUBHEAD: '89% of corporate leaders say AI will reshape jobs in 2026.' Grey, smaller.\n\nHORIZONTAL LAYOUT — 3 equal columns side by side. No arrows — parallel use cases.\n\n[ Sales Teams ] | [ Support Teams ] | [ RevOps Teams ]\n\nChildren below each column:\n\nCol 1 — Sales Teams:\nIcon: handshake or phone\n• AI agents research prospects\n• Draft personalized outreach\n• Book meetings 24/7\n• Human reps focus on closing\n\nCol 2 — Support Teams:\nIcon: headset or chat bubble\n• Triage tickets automatically\n• Draft responses from knowledge base\n• Escalate complex issues to humans\n• Response times drop, CSAT rises\n\nCol 3 — RevOps Teams:\nIcon: chart or database\n• Process data automatically\n• Generate reports on demand\n• Update CRMs without manual input\n• Ops leaders shift to decision-making\n\nSTAT BAR below columns (3 stats in a row):\n• '92% of companies increasing AI investment' (McKinsey)\n• '7.5 hours saved per week per worker' (LSE)\n• '3,000% ROI' (MongoDB case study)\n\nFOOTER: 'By 2030, every team will have an AI workforce — not just an AI assistant.' Dark italic.\nLOGO: bottom-right corner.",
+    "attachments": [
+      {
+        "id": "att_1772631971959_s7szy",
+        "name": "Luca RELEVANCE AI - AI WORKFORCE TRANSFORMATION.png",
+        "type": "image/png",
+        "size": 2652062
+      }
+    ]
+  },
+  {
+    "id": "1772574769930",
+    "title": "Intent Signals Claude Code",
+    "body": "Every LinkedIn post your team publishes is a goldmine of warm intent signals.\n\nMost teams ignore it. We built an agent to mine it automatically.\n\nHere's what we built with Claude Code:\n\nWhen someone likes, comments on, or shares one of our LinkedIn posts, our agent:\n• Scrapes all engagers via a scraping API\n• Sends them to Clay for enrichment\n• Runs ICP scoring + CRM de-dup + blocklist checks\n• Finds their work emails\n• Routes them into Instantly for an outbound sequence\n\nThe whole thing runs weekly on autopilot, deployed on Railway so it never stops.\n\nBefore Claude Code, I was paying $300+/month for dedicated scraping tools.\n\nNow I pay nothing extra — and it's more tightly integrated with our stack.\n\nWe also extended it to monitor competitor posts and keyword-based posts. Anyone posting about \"ABM\" or \"go-to-market\"? We scrape their audience and push them into LinkedIn Ads as a custom targeting segment.\n\nAre you using LinkedIn engagement as an outbound signal?",
+    "status": "ready",
+    "publishDate": "2026-04-20",
+    "publishTime": "09:00",
+    "source": "",
+    "tags": [],
+    "designInstructions": "ONE-PAGER. \n\nHEADLINE (top, centered): '$300/month → $0. And the workflow is better.' Bold, large. Strikethrough on '$300/month' in, '$0' \nSUBHEAD: 'We replaced our scraping stack with one Claude Code agent.' \n\nHORIZONTAL FLOW — 5 nodes connected by arrows (→):\n\n[ LinkedIn Post ] → [ Scrape Engagers ] → [ Enrich in Clay ] → [ Score & Filter ] → [ Route to Instantly ]\n\nChildren below each node:\n\nNode 1 — LinkedIn Post:\n• Any post from your team\n• Likes, comments, shares\n• Also monitors competitor posts\n• Keyword posts (e.g. 'ABM')\n\nNode 2 — Scrape Engagers:\n• Scraping API pulls all engagers\n• Name, profile URL, company\n• Runs automatically every week\n\nNode 3 — Enrich in Clay:\n• Job title, company size\n• Tech stack signals\n• Work email sourced\n\nNode 4 — Score & Filter:\n• ICP scoring applied\n• CRM de-duplication\n• Blocklist check\n\nNode 5 — Route to Instantly:\n• Qualified → outbound sequence\n• Deployed on Railway — 24/7\n• Zero manual input\n\nFOOTER: 'Runs every week. Zero button presses.' Grey italic.\nLOGO: bottom-right corner.",
+    "attachments": [
+      {
+        "id": "att_1772812755973_9i3ha",
+        "name": "Intent signals linkedin team.jpg",
+        "type": "image/jpeg",
+        "size": 2608775
+      }
+    ]
+  },
+  {
+    "id": "009",
+    "title": "The 4-File Folder That Runs a Full Outbound Agent",
+    "body": "This is the exact folder structure of a Claude Code outbound agent.\n\n4 files. A fully autonomous outbound machine.\n\nHere's what each one does:\n\nCLAUDE.md — The brain.\nEvery session starts here. It tells the agent what tools exist, what API credentials to use, and the rules it must follow. Think of it as a map — without it, the agent has no direction.\n\nscoring-criteria.md — Your ICP rubric.\nCompany size, industry, funding stage, web traffic. The agent reads this and scores every company automatically — no manual qualifying, no guesswork.\n\ncopy-framework.md — Your playbook in plain English.\nThe copy that's already working for you, saved permanently. The agent reads this and writes every email sequence in your voice, without you touching it.\n\ntemplates.md — Your output standard.\nExamples of what good output looks like. The agent uses these as a benchmark so every sequence follows the same format.\n\nThe pipeline runs like this:\n\ncompanies.csv → Score (criteria) → Find T1/T2 contacts (Apollo) → Enrich emails → Write sequences (copy-framework) → Deploy to Instantly\n\n5 steps. Zero manual work between them.\n\nBefore this:\n→ Scoring criteria in a spreadsheet no one updates\n→ Copy frameworks scattered across Google Docs\n→ Credentials copy-pasted every session\n→ Nothing talking to each other\n\nNow it all lives in one folder.\nThe agent reads every file before it runs.\nUpdate one file — every future campaign reflects it.\n\nThis isn't a chatbot. It's infrastructure.\n\nHow many of those 5 pipeline steps are you still doing manually?",
+    "status": "posted",
+    "publishDate": "2026-03-16",
+    "publishTime": "09:00",
+    "source": "Screenshot — Claude Code folder structure",
+    "tags": [
+      "Claude Code"
+    ],
+    "designInstructions": "ONE-PAGER.\n\nHEADLINE (top, centered): '4 files. A fully autonomous outbound agent.' Bold, large.\nSUBHEAD: 'Here is exactly what each file does.'\n\nHORIZONTAL FLOW — 5 pipeline steps connected by arrows (→):\n\n[ companies.csv ] → [ Score ] → [ Find Contacts ] → [ Enrich Emails ] → [ Write + Deploy ]\n\nBelow:\nNode 1 — companies.csv:\n• Input list\n• Any source works\n\nNode 2 — Score:\n• scoring-criteria.md\n• Company size, industry, funding, web traffic\n• Output: T1 / T2 / T3\n\nNode 3 — Find Contacts:\n• Filter T1/T2 only\n• Apollo search + enrich\n\nNode 4 — Enrich Emails:\n• Email enrichment provider\n• Find verified work emails\n\nNode 5 — Write + Deploy:\n• Read copy-framework.md + templates.md\n• Generate sequence\n• Push campaign to Instantly\n\nBELOW THE FLOW — swap row in pill tags:\nApollo → Clay | Enricher → any API | Instantly → Lemlist | Scoring → any ICP | Copy → any style\n\nFOOTER: 'This is infrastructure. Not a chatbot.' White italic.\nLOGO: bottom-right corner.",
+    "attachments": []
+  },
+  {
+    "id": "1772575184467",
+    "title": "Intent Signals > Firmographics (Prospeo)",
+    "body": "We ran the same outbound campaign twice: same ICP, same message, same sequences.\n\nFirst version: 10,000 contacts. 4.2% reply rate.\n\nSecond version: 3,200 contacts. 6.8% reply rate.\n\nThe only difference was timing.\n\n↳ The outbound landscape shifted in 2025. Firmographics alone stopped working.\n\nVP of Sales at Series A SaaS, 50-200 employees? That ICP is perfect.\n\nBut half of them just signed 2-year contracts.\n\nAnother 30% froze budgets after layoffs.\n\nSome are leaving their roles in weeks.\n\nPerfect ICP. Wrong timing.\n\nSo we started layering intent signals with @Prospeo V2.\n\nInstead of just firmographics, we layered in intent signals that show when a company is actually ready to buy.\n\n📊 A practical example:\n\nClient sells pipeline management software to SaaS companies.\n\nOld targeting:\n\n→ B2B SaaS, 50-200 employees, Series A-B, US-based\n\n→ VP of Sales or CRO title\n\nResult: 10,000 contacts, 4.2% reply rate\n\nNew targeting (with @Prospeo V2 intent filters):\n\n→ Same firmographics\n\n→ Sales dept grew 30%+ in last 90 days\n\n→ Raised funding in last 6 months\n\n→ Using Salesforce or HubSpot\n\nResult: 3,200 contacts, 6.8% reply rate.\n\n↳ Here's what's more interesting than the numbers.\n\nThe quality of replies changed. \n\nOld approach got \"not interested right now\" or \"check back in 6 months.\" \n\nNew approach got \"actually we were just talking about this last week\" or \"what's your calendar look like?\"\n\nPeople were already thinking about the problem when we showed up.\n\n↳ How we build these searches:\n\n1️⃣ Start with firmographics\n\nIndustry, company size, funding stage, location.\n\n2️⃣ Add growth signals\n\n→ Department headcount growth\n\n→ Recent funding rounds\n\n→ Active job postings\n\n3️⃣ Add tech stack filters\n\n→ Current tools they use\n\n→ Integrations we support\n\n→ Competitors we replace\n\n4️⃣ Filter for contact quality\n\n→ Verified email only\n\n→ Verified mobile only\n\n→ No incomplete data\n\nExport to CSV. Enrich in @Clay. Push to @Instantly.\n\nThis is how to not burning through 50,000 contacts per quarter but targeting 15,000 with 2x better performance.\n\n↳ The three intent signals that work best:\n\n1️⃣ Department growth\n\nSales team grew 30%+ in 90 days = they're scaling = they need infrastructure.\n\n2️⃣ Recent funding\n\nFresh budget = procurement unfrozen. Companies that just raised are more open than companies 18 months into efficiency mode.\n\n3️⃣ Job postings\n\nHiring SDRs = thinking about outbound. Hiring sales ops = thinking about tools. Active hiring = they're prioritizing that function.\n\nLayer all three together and you're prospecting when companies are ready to have the conversation.\n\n↳ If you're building lists based only on firmographics, you're playing a volume game. Contact enough people and some will be ready.\n\nTiming-based targeting flips that. Smaller lists, higher relevance, better results",
+    "status": "posted",
+    "publishDate": "2026-03-23",
+    "publishTime": "09:00",
+    "source": "monika notion",
+    "tags": [
+      "partner post",
+      "list building"
+    ],
+    "designInstructions": "ONE-PAGER. Light background (#F3F2EF). Dark text. Orange or amber accent for intent signals highlight.\n\nHEADLINE (top, centered): '10,000 contacts at 4.2% reply rate vs 3,200 contacts at 6.8% reply rate.' Bold, large.\nSUBHEAD: 'Same ICP. Same message. The only difference was timing.' Grey, smaller.\n\nHORIZONTAL FLOW — 4 filter layers connected by arrows (→):\n\n[ Firmographics ] → [ Growth Signals ] → [ Tech Stack ] → [ Contact Quality ]\n\nChildren below each node:\n\nNode 1 — Firmographics:\n• Industry\n• Company size\n• Funding stage\n• Location\n\nNode 2 — Growth Signals:\n• Sales dept grew 30%+ in 90 days\n• Raised funding in last 6 months\n• Active job postings in target dept\n\nNode 3 — Tech Stack:\n• Current tools they use\n• Integrations we support\n• Competitors we replace\n\nNode 4 — Contact Quality:\n• Verified email only\n• Verified mobile only\n• No incomplete data\n\nBELOW THE FLOW — output row:\n→ Export to CSV → Enrich in Clay → Push to Instantly\n\nSTAT CALLOUT (side or bottom): '3,200 contacts. 6.8% reply rate.' Large bold numbers in amber/orange.\n\nFOOTER: 'Smaller lists. Higher relevance. Better results.' Dark italic.\nLOGO: bottom-right corner.",
+    "attachments": []
+  },
+  {
+    "id": "1772636503047",
+    "title": "New Post",
+    "body": "We cut SMB list-building time by 50%.\n\nOne data source replaces five scattered tools.\n\nTeams were taking 4 hours per campaign building prospect lists.\n\nThey jumped between Apollo, ZoomInfo, manual Google searches, and two enrichment providers. \n\nEach tool covered different markets. None had complete SMB data.\n\nThe cost added up fast. They burned enrichment credits on basic firmographic data. More time verifying than prospecting.\n\nWe consolidated everything into @OpenMart inside @Clay.\n\n**↳ The data coverage:**\n\n200M+ SMBs across US, Canada, Australia, New Zealand, Puerto Rico, Ireland, UK, France, and Spain.\n\nData points other providers miss:\n\n→ Google ratings for each business\n→ Number of locations per company\n→ Verified contact information\n\nNo secondary enrichment needed.\n\n@OpenMart includes firmographics that used to cost extra credits from Clay or OpenAI APIs.\n\n**↳ Our workflow:**\n\n@OpenMart pulls SMB data → @Clay enriches and scores → @Instantly launches campaigns\n\nKenny (our Head of GTM) runs this for 25,000-company scoping projects. \n\nThe tier scoring happens automatically in @Clay based on employee count, sales team size, and location count.\n\nNo external scoring costs. No per-lookup charges.\n\n**↳ The impact:**\n\n→ 4 hours per campaign became 2 hours\n→ Data accuracy improved (fewer bounces, better targeting)\n→ Cost per lead dropped 30%\n\n**When this approach works:**\n\nYou target SMBs across multiple regions. Single-country enterprise targeting needs different tools.\n\nYou already use @Clay for enrichment. @OpenMart works best as an upstream data source feeding into your existing workflow.\n\nYou want to consolidate subscriptions. One source beats maintaining separate tools for each market.\n\nP.S. We still use other data sources for enterprise targeting. @OpenMart excels at SMB coverage. Different tools for different TAM segments.\n\nWhat's your biggest challenge with SMB list-building?",
+    "status": "missing-visual",
+    "publishDate": "2026-03-20",
+    "publishTime": "09:00",
+    "source": "monika",
+    "tags": [
+      "List building"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "1772638778021",
+    "title": "The Folder Structure That Makes Claude Code Compound",
+    "body": " Most people use Claude Code like a smarter terminal.                                                                                                       \n                                                                                                                                                                                                                      \n  The teams getting real ROI are using it like a fully briefed employee that picks up exactly where it left off — every single session.                                                                             \n                                                                                                                                                                                                                      \n  Here's how the folder structure makes that happen:                                                                                                                                                                  \n                                                                                                                                                                                                                      \n  Every automation lives in its own folder. That folder is the agent's brain.                                                                                                                                         \n                                                                                                                                                                                                                      \n  Inside every folder we build:                                                                                                                                                                                       \n\n  CLAUDE.md — the most important file. Tells Claude exactly what this project does, what tools are available, what the rules are, and what it should never do. Every session starts here.\n\n  /docs/ — how the workflow works. Step-by-step logic, design decisions, why we made specific choices. When something breaks 3 months later, this is where we look.\n\n  /reference/ — everything static the agent needs. API credentials, IDs, field names, endpoint structures. Claude Code reads this instead of asking you for it every time.\n\n  /reference/troubleshooting.md — every error we hit gets documented here with the fix. Claude reads it before every session. It never makes the same mistake twice.\n\n  /skills/ — reusable instructions for recurring tasks. Instead of re-explaining a process, we write it once as a skill. Claude calls it by name.\n\n  /workflows/ — the actual output. The finished automation, script, or workflow file — ready to import and deploy.\n\n  The process every time:\n\n  1. Open Claude Code inside the project folder\n  2. Claude reads CLAUDE.md and has full context instantly\n  3. You give one instruction — it knows the tools, the rules, the history\n  4. When it hits a new error, you fix it once and add it to troubleshooting.md\n  5. When a process repeats, you turn it into a skill\n  6. Deploy and it runs on its own\n\n  The folder compounds over time.\n\n  Every session makes it smarter. Every error that gets documented never costs you time again. Every new skill reduces how much you have to explain next time.\n\n  Tasks that used to take 20–30 minutes of manual work per instance now run automatically in the background — because all the context, logic, and credentials live in the folder permanently.\n\n  This is not a chatbot you prompt from scratch every time.\n\n  It's infrastructure you build once and maintain like any other system.\n\n  What would you build if every manual process in your ops had its own folder like this?",
+    "status": "draft",
+    "publishDate": "2026-04-17",
+    "publishTime": "09:00",
+    "source": "ClaudeProjects — ClickUp Automations folder",
+    "tags": [
+      "Claude Code",
+      "AI",
+      "Automation",
+      "Operations"
+    ],
+    "designInstructions": "ONE-PAGER. Dark background (#0D1117). White text. LinkedIn blue (#0A66C2) accents.\n\nHEADLINE (top, centered): 'The folder that makes Claude Code compound.' Bold, large.\nSUBHEAD: 'This is the structure we use for every automation.' Grey, smaller.\n\nHORIZONTAL LAYOUT — folder tree on the LEFT, descriptions on the RIGHT.\n\nFolder tree (monospace font, dark card):\nproject-folder/\n├── CLAUDE.md\n├── /docs/\n│   └── HOW-IT-WORKS.md\n├── /reference/\n│   ├── credentials.md\n│   └── troubleshooting.md\n├── /skills/\n│   └── [skill-name].md\n└── /workflows/\n    └── [output-file]\n\nRight side — one-line descriptions:\n• CLAUDE.md → Agent brain. Rules, tools, context.\n• /docs/ → Step-by-step logic + design decisions.\n• /reference/ → Static data Claude reads every session.\n• troubleshooting.md → Every error fixed once, never repeated.\n• /skills/ → Reusable instructions. Write once, call by name.\n• /workflows/ → The finished output. Ready to deploy.\n\nFOOTER: 'Not a chatbot. Infrastructure.' White italic, centered.\nLOGO: bottom-right corner.",
+    "attachments": []
+  },
+  {
+    "id": "1772818965032",
+    "title": "New Post",
+    "body": " The full outbound research stack used to cost $300–$500/month.                                                                                                                                                      \n                                                                                                                                                                                                                      \n  We built 13 free replacements.                                                                                                                                                                                      \n                                                                                                                                                                                                                      \n  No credit card. No trial. No catch.                                                                                                                                                                                 \n                                                                                                                                                                                                                      \n  Here's everything inside coldiq.com/free-tools:                                                                                                                                                                     \n                                                                                                                                                                                                                      \n  Finding the right targets                                                                                                                                                                                           \n  → Lookalike Finder — 100 similar companies from any domain, ranked by match score, exportable as CSV                                                                                                                \n  → Intent Signals — hiring spikes, funding rounds, leadership changes, and tech stack shifts                                                                                                                         \n  → Tech Stack Finder — every tool a company uses, scanned from their code and job postings                                                                                                                           \n  → Find People — employees at any company, pulled from LinkedIn data                                                                                                                                                 \n                                                                                                                                                                                                                      \n  Getting contact data                                                                                                                                                                                                \n  → Email Finder — verified emails for your prospect lists                                                                                                                                                            \n  → Phone Finder — verified mobile numbers for direct outreach                                                                                                                                                        \n  → Email Verifier — validate before sending, cut bounces at the source                                                                                                                                               \n  → Spam Checker — clean and validate full lists in seconds                                                                                                                                                           \n                                                                                                                                                                                                                      \n  Planning the campaign                                                                                                                                                                                               \n  → GTM Reports — enter your domain, get ICP, buyer personas, target industries, channels, and campaign ideas                                                                                                         \n  → Campaign Ideation — full-funnel campaign angles in 30 seconds, top to bottom of funnel                                                                                                                            \n  → ROI Calculator — model your exact revenue, CAC, and cost-per-meeting before you spend a dollar                                                                                                                    \n                                                                                                                                                                                                                      \n  Running better copy                                                                                                                                                                                                 \n  → Email Copy Optimizer — paste any email, get AI rewrites on subject lines and body                                                                                                                                 \n  → LinkedIn Post Previewer — see exactly how your post looks before publishing                                                                                                                                       \n                                                                                                                                                                                                                      \n  We run all 13 across 70+ active client campaigns every month.                                                                                                                                                       \n                                                                                                                                                                                                                      \n  Built these for ourselves first.                                                                                                                                                                                    \n                                                                                                                                                                                                                      \n  Then realized you probably need them too.                                                                                                                                                                           \n                                                                                                                                                                                                                      \n  Which one would you use first? 👇                                                                                                                                                                                   \n                                    ",
+    "status": "draft",
+    "publishDate": "2026-05-11",
+    "publishTime": "09:00",
+    "source": "coldiq website",
+    "tags": [
+      "tools stack"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "1773055321401",
+    "title": "Skill for every department",
+    "body": "",
+    "status": "draft",
+    "publishDate": "2026-04-08",
+    "publishTime": "09:00",
+    "source": "",
+    "tags": [],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "011",
+    "title": "Claude Code: 57-Second Campaign",
+    "body": "We built a complete cold email campaign in 57 seconds.\nCompany list to 154 leads loaded in Instantly. Zero errors. Zero manual work.\n\nHere is the full system.\n\n1️⃣ Score the companies\nDrop your company list into Claude Code. It reads your ICP scoring criteria and tiers every company — T1, T2, T3, disqualified — using a Python script on the raw CSV data. No guessing. No hallucination.\n\n2️⃣ Find the contacts\nTell it the persona you want. Claude hits the Apollo API, pulls the right people at T1 and T2 companies, and returns a breakdown by seniority and contacts per company.\n\n3️⃣ Enrich the emails\n144 of 159 contacts had emails from Apollo. Claude then hit LeadMagic and Lima Data for the remaining 15. Got 10 more. Done in seconds.\n\n4️⃣ Write the copy\nClaude connects to Instantly via API, pulls your best-performing campaigns by reply rate, extracts the frameworks, and generates copy for the new campaign. No starting from scratch.\n\n5️⃣ Create and load the campaign\nClaude creates the campaign in Instantly, injects the copy, uploads all leads, and configures send settings, scheduling, and delivery optimization. All of it.\n\nBefore: company list → score manually → find contacts → enrich → write copy → build campaign → upload leads.\nAfter: company list → one prompt → campaign live in Instantly.\n\nThe tools did not change. Apollo, Instantly, LeadMagic.\nThe layer connecting them did.\n\nWhat part of your outbound setup would you automate first? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-15",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": [
+      "Claude Code",
+      "Outbound",
+      "GTM",
+      "Automation"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "012",
+    "title": "GTM Brain: Connected Outbound",
+    "body": "Clay. Apollo. Instantly. 3 tools running your outbound.\nNone of them talking to each other.\n\nApollo has your contacts. Clay has your enrichment. Instantly has your sequences.\nSame data. Siloed everywhere. Every campaign starts from scratch.\n\nWe fixed this with a single Claude Code setup.\n\nHere is how it works:\n\n1️⃣ One folder. All context.\nCompany lists, contact data, copy frameworks, campaign analytics — saved locally. Claude reads all of it before doing anything.\n\n2️⃣ One instruction file. All behavior.\nA CLAUDE.md file tells Claude: use this scoring criteria, find contacts via Apollo, write copy from these frameworks, push to Instantly. Four lines. Nothing more.\n\n3️⃣ Every campaign makes the next one better.\nClaude connects to your Instantly account, pulls best-performing campaigns by analytics, extracts the copy frameworks, and builds on them automatically. The system compounds.\n\nWhat you end up with is a single brain that knows your ICP, your tools, your copy, and your results — all in one place.\n\nOld way: siloed tools, manual handoffs, starting from scratch every campaign.\nNew way: one context layer, everything connected, outputs that improve over time.\n\nHave you tried centralizing your GTM context into one place? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-09",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": [
+      "Claude Code",
+      "GTM",
+      "Outbound",
+      "AI"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "013",
+    "title": "Bottoms-Up Outreach Strategy",
+    "body": "Most outbound teams go straight to the VP.\nWe start with the SDR team. Here is why reply rates are higher.\n\nThe logic: by the time you reach the decision-maker, the internal conversation has already started.\n\nHere is the approach:\n\n1. Target the SDR and AE team first\nSend resources, value, webinar invites, lead magnets. Low-stakes outreach. High open rate. They are not the gatekeeper — they are the internal amplifier.\n\n2. Move up to managers and team leads\nThey are talking to their teams. Your name is coming up in internal conversations. Now you have context to reference when you reach out.\n\n3. Reach the VP or CRO last\nTwo things have happened by now. Their team has seen your name. And you can say: \"I've already been working with a few people on your team.\"\n\n4-5 contacts per company. No more.\nEnough to create internal noise. Not enough to burn the account.\n\nAfter 60 days with no reply, re-engage with different people at the same company. The account stays warm. The conversation keeps moving.\n\nMost outbound skips straight to the signature.\nBottoms-up builds the internal case before you ever get there.\n\nWhat is your current approach — top-down or bottoms-up? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-11",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": [
+      "Outbound",
+      "GTM",
+      "Cold Email",
+      "Sales"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "014",
+    "title": "Self-Improving Copy via Instantly",
+    "body": "Claude Code reads your best-performing campaigns and writes your next one.\n\nNot from a template you wrote once and forgot about.\nFrom your actual live campaign data — reply rates, open rates, sequences that converted.\n\nHere is how it works.\n\nClaude connects to your Instantly account via API. It pulls campaign analytics, ranks by performance, and extracts the copy from the top-performing sequences.\n\nThose become your live frameworks.\n\nWhen you launch a new campaign, Claude:\n→ Finds the best-performing template for your campaign type\n→ Injects your new context — persona, offer, goal, date\n→ Generates copy that mirrors what already worked\n\nThe longer you run it, the better it gets.\nEvery campaign you launch adds to the data Claude is learning from.\n\nMost teams write copy from scratch every time.\nOr they reuse old templates they vaguely remember working.\n\nThis does neither. It finds what worked, learns the pattern, and builds on it automatically.\n\nBefore: dig through old campaigns manually or start from a blank doc.\nAfter: Claude pulls your best performers and writes the next one in seconds.\n\nAre you systematically learning from your past campaigns or starting fresh each time? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-22",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": [
+      "Cold Email",
+      "Outbound",
+      "Claude Code",
+      "Instantly"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "015",
+    "title": "4-Line CLAUDE.md Outbound System",
+    "body": "Our entire outbound operation runs from a 4-line instruction file.\n\nHere is what it says:\n\n→ Score companies using this ICP criteria document\n→ Find contacts via Apollo API\n→ Write copy using our best-performing frameworks\n→ Create and push campaigns to Instantly\n\nThat is it. Four lines. No code. No technical setup.\n\nFrom here, Claude handles everything else:\n→ Reads the API docs for each tool\n→ Connects via API keys you provide\n→ Decides what endpoint to use at each step\n→ Batches work at 100-200 records to maintain quality\n→ Saves all outputs so every campaign builds on the last\n\nThe file is called CLAUDE.md.\nIt is the brain behind the whole system.\n\nMost people think automating outbound at this level requires an engineering team, expensive tooling, or months of setup.\n\nIt requires four lines of plain English and an afternoon.\n\nWhat would your 4-line instruction file say? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-16",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": [
+      "Claude Code",
+      "Outbound",
+      "GTM",
+      "AI"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  },
+  {
+    "id": "016",
+    "title": "Record Your Workday — Claude Code",
+    "body": "1 habit that will change how you use Claude Code:\nRecord your workday. All of it.\n\nNot a workflow diagram. Not a list of tools you use.\nA real recording of what you actually do, hour by hour.\n\nThen give it to Claude Code and ask: what should I automate?\n\nHere is why this works:\n\n1. You stop guessing what to automate\nMost teams automate the obvious stuff first. Claude will find the high-leverage tasks — the manual work you have done so many times you stopped noticing it.\n\n2. The output is specific to your business\nNot a generic playbook. A system built around how your team actually operates, the tools you use, and the results you are already getting.\n\n3. Claude already has your context\nYour ICP, your copy, your tools, your process. Feed it once. It builds on it forever.\n\nThe scariest thing about Claude Code is the terminal. It looks like a developer tool.\nOnce you open it, you realize it is just a chat interface — the same as asking Claude or ChatGPT a question.\n\nThe only difference is that this one can actually do things.\n\nStart there. Record a day. See what comes back.\n\nWhat is one task in your GTM workflow you do manually every single day? 👇",
+    "status": "draft",
+    "publishDate": "2026-04-18",
+    "publishTime": "09:00",
+    "source": "YouTube — Kenny Head of GTM at ColdIQ",
+    "tags": [
+      "Claude Code",
+      "GTM",
+      "AI",
+      "Productivity"
+    ],
+    "designInstructions": "",
+    "attachments": []
+  }
+]
