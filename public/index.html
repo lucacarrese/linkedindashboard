@@ -433,6 +433,58 @@
     #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: #1d1d1d; color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.22s; pointer-events: none; white-space: nowrap; z-index: 999; }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+    /* ─── STRATEGIST ─────────────────────────────────────── */
+    .strat-tab-bar { display: flex; gap: 4px; background: #f3f2ef; border-radius: 8px; padding: 3px; }
+    .strat-tab-btn { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #888; cursor: pointer; transition: all 0.12s; }
+    .strat-tab-btn.active { background: white; color: #1d1d1d; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .strat-tab-btn:hover:not(.active) { color: #555; }
+
+    .strat-panel { display: none; flex: 1; overflow: hidden; }
+    .strat-panel.active { display: flex; flex-direction: column; }
+
+    .strat-layout { display: grid; grid-template-columns: 220px 1fr; height: 100%; overflow: hidden; }
+
+    .strat-skills-col { border-right: 1px solid #e8e8e8; padding: 20px 16px; overflow-y: auto; background: #fafafa; }
+    .strat-skills-header { font-size: 10px; font-weight: 700; color: #bbb; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .strat-skills-list { display: flex; flex-direction: column; gap: 8px; }
+    .strat-skill-pill {
+      display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px;
+      background: white; border: 1px solid #eee; border-radius: 8px;
+      font-size: 12px; color: #555; line-height: 1.3;
+    }
+    .strat-skill-pill .sp-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .strat-skill-pill .sp-name { font-weight: 600; color: #1d1d1d; margin-bottom: 2px; }
+    .strat-skill-pill .sp-desc { font-size: 11px; color: #aaa; }
+    .strat-skill-pill.pinned { border-color: #C4384A; background: #fff5f5; }
+    .strat-skill-pill.pinned .sp-name { color: #C4384A; }
+
+    .strat-write-col { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding: 20px 24px; }
+
+    .strat-input-card { background: white; border-radius: 12px; border: 1px solid #e8e8e8; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
+    .strat-input-label { padding: 14px 16px 8px; font-size: 13px; font-weight: 700; color: #1d1d1d; }
+    .strat-prompt-input { width: 100%; border: none; outline: none; resize: none; font-size: 13px; line-height: 1.7; color: #333; padding: 0 16px 12px; font-family: inherit; }
+    .strat-prompt-input::placeholder { color: #ccc; }
+    .strat-input-footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+    .strat-model-label { font-size: 11px; color: #bbb; font-weight: 500; background: #f0f0f0; padding: 3px 8px; border-radius: 10px; }
+    .btn-generate { background: #C4384A; color: white; border: none; border-radius: 20px; padding: 8px 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.13s; }
+    .btn-generate:hover { background: #a82e3c; }
+    .btn-generate:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
+
+    .strat-output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .strat-output-label { font-size: 13px; font-weight: 700; color: #1d1d1d; }
+    .strat-output-actions { display: flex; gap: 6px; }
+    .strat-output-body {
+      background: white; border: 1px solid #e8e8e8; border-radius: 12px;
+      padding: 20px; font-size: 14px; line-height: 1.8; color: #1d1d1d;
+      white-space: pre-wrap; min-height: 120px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .strat-output-body.streaming { color: #333; }
+    .strat-output-body.streaming::after { content: '▌'; animation: blink 0.8s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    .strat-output-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .strat-char-count { font-size: 11px; color: #bbb; }
+    .strat-error { background: #fdecea; border: 1px solid #f5c0bb; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #c0392b; }
+
     @media (max-width: 900px) {
       .calendar-layout { grid-template-columns: 1fr; }
       .progress-metrics { grid-template-columns: 1fr 1fr; }
@@ -589,10 +641,59 @@
       <div class="topbar">
         <div class="topbar-title">LinkedIn Strategist</div>
         <div class="topbar-actions">
-          <button class="btn btn-primary" onclick="openStratModal()">+ Add Skill</button>
+          <div class="strat-tab-bar">
+            <div class="strat-tab-btn active" id="strat-tab-write" onclick="switchStratTab('write')">✍️ Write</div>
+            <div class="strat-tab-btn" id="strat-tab-skills" onclick="switchStratTab('skills')">⚡ Skills</div>
+          </div>
         </div>
       </div>
-      <div class="section-body">
+
+      <!-- WRITE TAB -->
+      <div id="strat-write-panel" class="strat-panel active">
+        <div class="strat-layout">
+
+          <!-- Left: active skills -->
+          <div class="strat-skills-col">
+            <div class="strat-skills-header">Active Skills</div>
+            <div class="strat-skills-list" id="strat-active-skills"></div>
+          </div>
+
+          <!-- Right: write + output -->
+          <div class="strat-write-col">
+            <div class="strat-input-card">
+              <div class="strat-input-label">What should I write about?</div>
+              <textarea class="strat-prompt-input" id="strat-prompt" placeholder="Paste a transcript, describe a topic, share an angle, or drop a URL...&#10;&#10;Example: 'Write a post about how we built a 57-second outbound campaign using Claude Code. The hook should be around the time (57 seconds). Step-by-step format.'"  rows="6"></textarea>
+              <div class="strat-input-footer">
+                <span class="strat-model-label">claude-opus-4-6</span>
+                <button class="btn-generate" id="generate-btn" onclick="generatePost()">Generate Post →</button>
+              </div>
+            </div>
+
+            <div id="strat-output-area" style="display:none">
+              <div class="strat-output-header">
+                <span class="strat-output-label">Generated Post</span>
+                <div class="strat-output-actions">
+                  <button class="btn btn-secondary" onclick="copyGeneratedPost()">Copy</button>
+                  <button class="btn btn-primary" onclick="saveGeneratedPost()">Save as Draft →</button>
+                </div>
+              </div>
+              <div class="strat-output-body" id="strat-output"></div>
+              <div class="strat-output-footer">
+                <span class="strat-char-count" id="strat-char-count"></span>
+                <button class="btn btn-secondary" onclick="generatePost()">Regenerate</button>
+              </div>
+            </div>
+
+            <div id="strat-error-area" style="display:none" class="strat-error"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKILLS TAB -->
+      <div id="strat-skills-panel" class="strat-panel" style="overflow-y:auto;padding:24px">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+          <button class="btn btn-primary" onclick="openStratModal()">+ Add Skill</button>
+        </div>
         <div class="skills-grid" id="strategist-grid"></div>
       </div>
     </section>
@@ -862,7 +963,7 @@ function switchSection(name, el) {
   if (name === 'posts')      renderPostsSection();
   if (name === 'ideas')      renderIdeasGrid();
   if (name === 'skills')     renderSkillsGrid();
-  if (name === 'strategist') renderStrategistGrid();
+  if (name === 'strategist') { renderStratActiveSkills(); renderStrategistGrid(); }
   if (name === 'progress')   renderProgress();
   if (name === 'calendar')   { renderCalendar(); renderPostList(); }
 }
@@ -1473,6 +1574,116 @@ function showToast(msg) {
 }
 
 // ─── LINKEDIN STRATEGIST ─────────────────────────────────────────
+let generatedPost = '';
+let isGenerating = false;
+
+function switchStratTab(tab) {
+  document.getElementById('strat-tab-write').classList.toggle('active', tab === 'write');
+  document.getElementById('strat-tab-skills').classList.toggle('active', tab === 'skills');
+  document.getElementById('strat-write-panel').classList.toggle('active', tab === 'write');
+  document.getElementById('strat-skills-panel').classList.toggle('active', tab === 'skills');
+  if (tab === 'write') renderStratActiveSkills();
+  if (tab === 'skills') renderStrategistGrid();
+}
+
+function renderStratActiveSkills() {
+  const fixed = [
+    { icon: '🚫', name: 'Anti-AI Writing Style', desc: 'Primary filter — always applied', pinned: true },
+    { icon: '✍️', name: 'Post Patterns & Structure', desc: 'Hook formulas, A/B/C/D patterns', pinned: false },
+    { icon: '🎯', name: 'Audience & Tone', desc: 'B2B GTM voice rules', pinned: false },
+  ];
+  const custom = STRATEGIST.map(s => ({ icon: s.icon || '🧠', name: s.name, desc: s.desc || '', pinned: false }));
+  const all = [...fixed, ...custom];
+  document.getElementById('strat-active-skills').innerHTML = all.map(s => `
+    <div class="strat-skill-pill ${s.pinned ? 'pinned' : ''}">
+      <div class="sp-icon">${esc(s.icon)}</div>
+      <div><div class="sp-name">${esc(s.name)}</div><div class="sp-desc">${esc(s.desc)}</div></div>
+    </div>`).join('');
+}
+
+async function generatePost() {
+  const prompt = document.getElementById('strat-prompt').value.trim();
+  if (!prompt) { showToast('Add a prompt first'); return; }
+  if (isGenerating) return;
+
+  isGenerating = true;
+  generatedPost = '';
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = true; btn.textContent = 'Generating...';
+
+  document.getElementById('strat-error-area').style.display = 'none';
+  document.getElementById('strat-output-area').style.display = 'block';
+  const outputEl = document.getElementById('strat-output');
+  outputEl.textContent = '';
+  outputEl.className = 'strat-output-body streaming';
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Generation failed');
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6);
+        if (data === '[DONE]') break;
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) throw new Error(parsed.error);
+          if (parsed.text) {
+            generatedPost += parsed.text;
+            outputEl.textContent = generatedPost;
+            document.getElementById('strat-char-count').textContent = `${generatedPost.length.toLocaleString()} characters`;
+          }
+        } catch(e) { if (e.message !== 'Unexpected end of JSON input') throw e; }
+      }
+    }
+    outputEl.className = 'strat-output-body';
+  } catch (err) {
+    document.getElementById('strat-output-area').style.display = 'none';
+    const errEl = document.getElementById('strat-error-area');
+    errEl.style.display = 'block';
+    errEl.textContent = '⚠️ ' + err.message;
+  }
+
+  isGenerating = false;
+  btn.disabled = false; btn.textContent = 'Generate Post →';
+}
+
+function copyGeneratedPost() {
+  if (!generatedPost) return;
+  navigator.clipboard.writeText(generatedPost).then(() => showToast('Copied to clipboard'));
+}
+
+async function saveGeneratedPost() {
+  if (!generatedPost) return;
+  const newId = String(Date.now());
+  const title = generatedPost.split('\n')[0].slice(0, 60) || 'New Post';
+  const post = { id: newId, title, body: generatedPost, status: 'draft', publishDate: fmtDate(new Date()), publishTime: '09:00', source: 'LinkedIn Strategist', tags: [], designInstructions: '', attachments: [] };
+  POSTS.push(post);
+  await api('POST', '/api/posts', post);
+  renderStats(); renderSidebarStats();
+  showToast('Saved as draft — opening post...');
+  setTimeout(() => {
+    switchSection('posts', document.querySelector('[data-section="posts"]'));
+    openPost(newId);
+  }, 400);
+}
+
 function renderStrategistGrid() {
   const grid = document.getElementById('strategist-grid');
   if (!STRATEGIST.length) {

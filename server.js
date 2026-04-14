@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -135,6 +136,83 @@ app.get('/api/skills', (req, res) => {
   }
 
   res.json(skills);
+});
+
+// ─── GENERATE POST (Claude API) ─────────────────────────────────
+app.post('/api/generate', async (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: 'No prompt provided' });
+  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your_api_key_here') {
+    return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set. Add it to your .env file and Railway environment variables.' });
+  }
+
+  // Build system prompt from all skills
+  const skillParts = [];
+
+  // 1. Always load anti-AI writing style first
+  const antiAI = readMD(path.join(SKILLS_DIR, 'anti-ai-writing-style.md'));
+  if (antiAI) skillParts.push(`# WRITING STYLE RULES (read first)\n\n${antiAI}`);
+
+  // 2. Post patterns
+  const patterns = readMD(path.join(EXAMPLES_DIR, '_patterns.md'));
+  if (patterns) skillParts.push(`# POST STRUCTURE PATTERNS\n\n${patterns}`);
+
+  // 3. Audience & tone
+  const tone = readMD(path.join(CONTEXT_DIR, 'audience_and_tone.md'));
+  if (tone) skillParts.push(`# AUDIENCE & TONE\n\n${tone}`);
+
+  // 4. Custom strategist skills
+  const customSkills = readJSON(STRATEGIST_FILE);
+  customSkills.forEach(s => {
+    if (s.content) skillParts.push(`# ${s.name.toUpperCase()}\n\n${s.content}`);
+  });
+
+  const systemPrompt = `You are a LinkedIn content writer for Luca Carrese, founder of ColdIQ — a B2B outbound sales agency at $7M ARR.
+
+Your job is to write high-performing LinkedIn posts for Luca's personal brand. Every post must follow the rules below exactly.
+
+${skillParts.join('\n\n---\n\n')}
+
+---
+
+OUTPUT FORMAT:
+- Return only the finished post text, ready to copy-paste into LinkedIn
+- No preamble, no explanation, no "Here's the post:"
+- No markdown formatting in the output — plain text only
+- Do not add a title or subject line`;
+
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+    // Stream the response
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    const stream = client.messages.stream({
+      model: 'claude-opus-4-6',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: prompt }]
+    });
+
+    stream.on('text', (text) => {
+      res.write(`data: ${JSON.stringify({ text })}\n\n`);
+    });
+
+    stream.on('finalMessage', () => {
+      res.write('data: [DONE]\n\n');
+      res.end();
+    });
+
+    stream.on('error', (err) => {
+      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+      res.end();
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── LINKEDIN STRATEGIST ────────────────────────────────────────
