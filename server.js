@@ -163,7 +163,9 @@ app.get('/api/skills', (req, res) => {
 
 // ─── GENERATE POST (Claude API) ─────────────────────────────────
 app.post('/api/generate', async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, selectedFileSkills, selectedSkillIds } = req.body;
+  const fileSkillsOn = selectedFileSkills || null; // null = all on (default)
+  const customSkillsOn = selectedSkillIds || null;
   if (!prompt) return res.status(400).json({ error: 'No prompt provided' });
   if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your_api_key_here') {
     return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set. Add it to your .env file and Railway environment variables.' });
@@ -191,18 +193,35 @@ app.post('/api/generate', async (req, res) => {
     skillParts.push(`# COLDIQ LINKEDIN COMPETITION STRATEGY\n\n${compContent}`);
   }
 
-  // 3. Post patterns
-  const patterns = readMD(path.join(EXAMPLES_DIR, '_patterns.md'));
-  if (patterns) skillParts.push(`# POST STRUCTURE PATTERNS\n\n${patterns}`);
+  // 3. Post patterns (optional)
+  const usePatterns = !fileSkillsOn || fileSkillsOn.includes('_patterns.md');
+  if (usePatterns) {
+    const patterns = readMD(path.join(EXAMPLES_DIR, '_patterns.md'));
+    if (patterns) skillParts.push(`# POST STRUCTURE PATTERNS\n\n${patterns}`);
+  }
 
-  // 4. Audience & tone
-  const tone = readMD(path.join(CONTEXT_DIR, 'audience_and_tone.md'));
-  if (tone) skillParts.push(`# AUDIENCE & TONE\n\n${tone}`);
+  // 4. Audience & tone (optional)
+  const useTone = !fileSkillsOn || fileSkillsOn.includes('audience_and_tone.md');
+  if (useTone) {
+    const tone = readMD(path.join(CONTEXT_DIR, 'audience_and_tone.md'));
+    if (tone) skillParts.push(`# AUDIENCE & TONE\n\n${tone}`);
+  }
 
-  // 5. Custom strategist skills
+  // 5. Other file skills from /skills/ that are selected
+  if (fs.existsSync(SKILLS_DIR)) {
+    fs.readdirSync(SKILLS_DIR).filter(f => f.endsWith('.md') && !['anti-ai-writing-style.md'].includes(f)).forEach(file => {
+      const selected = !fileSkillsOn || fileSkillsOn.includes(file);
+      if (!selected) return;
+      const content = readMD(path.join(SKILLS_DIR, file));
+      if (content) skillParts.push(`# ${file.replace('.md','').toUpperCase()}\n\n${content}`);
+    });
+  }
+
+  // 6. Custom strategist skills (optional)
   const customSkills = readJSON(STRATEGIST_FILE);
   customSkills.forEach(s => {
-    if (s.content) skillParts.push(`# ${s.name.toUpperCase()}\n\n${s.content}`);
+    const selected = !customSkillsOn || customSkillsOn.includes(s.id);
+    if (s.content && selected) skillParts.push(`# ${s.name.toUpperCase()}\n\n${s.content}`);
   });
 
   const systemPrompt = `You are a LinkedIn content writer for Luca Carrese, founder of ColdIQ — a B2B outbound sales agency at $7M ARR.
