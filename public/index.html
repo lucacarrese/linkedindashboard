@@ -352,6 +352,91 @@
     .rs-source-toggle .rs-dot { width: 7px; height: 7px; border-radius: 50%; background: #d1d5db; }
     .rs-source-toggle.active .rs-dot { background: #16a34a; }
 
+    /* ─── TOOLS ──────────────────────────────────────────── */
+    .tools-grid { display: flex; flex-direction: column; gap: 16px; }
+    .tool-panel { background: white; border-radius: 12px; border: 1px solid #e8e8e8; overflow: hidden; }
+    .tool-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.12s; }
+    .tool-header:hover { background: #fafafa; }
+    .tool-icon { font-size: 22px; }
+    .tool-info { flex: 1; }
+    .tool-name { font-size: 14px; font-weight: 700; color: #1d1d1d; }
+    .tool-desc { font-size: 12px; color: #888; margin-top: 2px; }
+    .tool-chevron { font-size: 11px; color: #aaa; transition: transform 0.2s; }
+    .tool-chevron.open { transform: rotate(180deg); }
+    .tool-body { display: none; padding: 0 20px 20px; border-top: 1px solid #f0f0f0; }
+    .tool-body.open { display: block; }
+    .tool-form { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .tool-field label { display: block; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .tool-field input, .tool-field textarea, .tool-field select {
+      width: 100%; font-size: 13px; padding: 8px 12px; border: 1px solid #e0e0e0;
+      border-radius: 8px; outline: none; font-family: inherit; color: #333; box-sizing: border-box;
+    }
+    .tool-field input:focus, .tool-field textarea:focus, .tool-field select:focus { border-color: #1d1d1d; }
+    .tool-field textarea { min-height: 100px; resize: vertical; line-height: 1.5; }
+    .btn-tool-run {
+      margin-top: 4px; padding: 9px 20px; border-radius: 8px; border: none;
+      background: #1d1d1d; color: white; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: background 0.12s; align-self: flex-start;
+    }
+    .btn-tool-run:hover { background: #333; }
+    .btn-tool-run:disabled { background: #bbb; cursor: not-allowed; }
+    .tool-output { margin-top: 16px; display: none; }
+    .tool-output.visible { display: block; }
+    .tool-output-title { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
+    /* Hook cards */
+    .hook-top-picks { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .hook-card { background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 14px; }
+    .hook-card.all { background: #f9f9f9; border-color: #e8e8e8; }
+    .hook-text { font-size: 14px; font-weight: 600; color: #1d1d1d; margin-bottom: 8px; line-height: 1.4; }
+    .hook-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .hook-trigger { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; }
+    .trigger-desire { background: #fef3c7; color: #92400e; }
+    .trigger-curiosity { background: #dbeafe; color: #1e40af; }
+    .trigger-fear { background: #fee2e2; color: #991b1b; }
+    .hook-template { font-size: 11px; color: #888; }
+    .hook-reasoning { font-size: 12px; color: #555; margin-top: 8px; font-style: italic; }
+    .hook-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .btn-hook-copy { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: 1px solid #e0e0e0; background: white; cursor: pointer; color: #555; }
+    .btn-hook-copy:hover { background: #f5f5f5; }
+    .btn-hook-use { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: none; background: #9333ea; color: white; cursor: pointer; }
+    .btn-hook-use:hover { background: #7e22ce; }
+    /* Grade output */
+    .grade-scorecard { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .grade-row { display: flex; align-items: center; gap: 10px; }
+    .grade-label { font-size: 12px; font-weight: 600; color: #555; width: 140px; flex-shrink: 0; }
+    .grade-bar-wrap { flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+    .grade-bar { height: 100%; border-radius: 3px; transition: width 0.4s; }
+    .grade-score { font-size: 12px; font-weight: 700; color: #1d1d1d; width: 30px; text-align: right; }
+    .grade-verdict { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+    .grade-verdict.pass { background: #dcfce7; color: #166534; }
+    .grade-verdict.fail { background: #fee2e2; color: #991b1b; }
+    .grade-total { font-size: 22px; font-weight: 800; color: #1d1d1d; margin-bottom: 4px; }
+    .grade-diagnosis { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px; }
+    .grade-diag-title { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+    .grade-diag-item { font-size: 12px; color: #444; margin-bottom: 6px; line-height: 1.5; }
+    .grade-diag-item strong { color: #1d1d1d; }
+    .grade-directive { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .grade-directive-item { font-size: 12px; color: #444; background: white; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; line-height: 1.5; }
+    /* Reverse engineering output */
+    .framework-cards { display: flex; flex-direction: column; gap: 10px; }
+    .framework-card { background: white; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px; }
+    .framework-card.visual { border-left: 3px solid #f59e0b; }
+    .framework-card.text { border-left: 3px solid #0A66C2; }
+    .framework-title { font-size: 13px; font-weight: 700; color: #1d1d1d; margin-bottom: 6px; }
+    .framework-meta { font-size: 12px; color: #666; line-height: 1.6; }
+    .framework-angle { font-size: 12px; font-weight: 600; color: #0A66C2; margin-top: 8px; }
+    .framework-pillar { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: #f0f0f0; color: #555; margin-top: 6px; }
+    /* Repurpose output */
+    .repurpose-section { margin-bottom: 20px; }
+    .repurpose-section-title { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f0f0f0; }
+    .repurpose-card { background: white; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+    .repurpose-card-title { font-size: 13px; font-weight: 700; color: #1d1d1d; margin-bottom: 4px; }
+    .repurpose-card-meta { font-size: 12px; color: #888; }
+    .repurpose-card-angle { font-size: 12px; color: #0A66C2; font-weight: 600; margin-top: 6px; }
+    .tag-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #f0f0f0; color: #555; margin: 2px; }
+    .btn-use-angle { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; border: none; background: #1d1d1d; color: white; cursor: pointer; margin-top: 8px; }
+    .btn-use-angle:hover { background: #333; }
+
     /* ─── SKILLS ─────────────────────────────────────────── */
     .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .skill-card {
@@ -674,6 +759,9 @@
       <div class="nav-item" data-section="strategist" onclick="switchSection('strategist',this)">
         <span class="nav-icon">🧠</span><span>LinkedIn Strategist</span>
       </div>
+      <div class="nav-item" data-section="tools" onclick="switchSection('tools',this)">
+        <span class="nav-icon">🔧</span><span>Tools</span>
+      </div>
       <div class="nav-item" data-section="progress" onclick="switchSection('progress',this)">
         <span class="nav-icon">📈</span><span>Progress</span>
       </div>
@@ -924,6 +1012,171 @@
           <button class="btn btn-primary" onclick="openStratModal()">+ Add Skill</button>
         </div>
         <div class="skills-grid" id="strategist-grid"></div>
+      </div>
+    </section>
+
+    <!-- TOOLS -->
+    <section class="section" id="section-tools">
+      <div class="topbar">
+        <div class="topbar-title">Tools</div>
+      </div>
+      <div class="section-body">
+        <div class="tools-grid">
+
+          <!-- HOOK GENERATOR -->
+          <div class="tool-panel" id="tool-hooks">
+            <div class="tool-header" onclick="toggleTool('hooks')">
+              <div class="tool-icon">🎣</div>
+              <div class="tool-info">
+                <div class="tool-name">Hook Generator</div>
+                <div class="tool-desc">Generate 15–20 hook variations ranked to top 3–5. Paste the best one into your post.</div>
+              </div>
+              <span class="tool-chevron" id="chevron-hooks">▼</span>
+            </div>
+            <div class="tool-body" id="body-hooks">
+              <div class="tool-form">
+                <div class="tool-field">
+                  <label>Topic / Insight</label>
+                  <input type="text" id="hook-topic" placeholder="e.g. How we built our outbound system with Clay" />
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <div class="tool-field">
+                    <label>Category</label>
+                    <select id="hook-category">
+                      <option value="Teach">Teach / Educational</option>
+                      <option value="Lead">Lead / Thought Leadership</option>
+                      <option value="Prove">Prove / Social Proof</option>
+                      <option value="Connect">Connect / Relationship</option>
+                      <option value="Respond">Respond / Amplify</option>
+                    </select>
+                  </div>
+                  <div class="tool-field">
+                    <label>Goal</label>
+                    <select id="hook-goal">
+                      <option value="authority">Authority</option>
+                      <option value="engagement">Engagement</option>
+                      <option value="lead gen">Lead Gen</option>
+                      <option value="conversion">Conversion</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="tool-field">
+                  <label>Specific Numbers / Results (optional)</label>
+                  <input type="text" id="hook-numbers" placeholder="e.g. 47 meetings in 30 days, $2.3M pipeline" />
+                </div>
+                <div class="tool-field">
+                  <label>Target Reader (optional)</label>
+                  <input type="text" id="hook-reader" placeholder="e.g. Head of Sales at B2B SaaS" />
+                </div>
+                <button class="btn-tool-run" id="btn-run-hooks" onclick="runHookGenerator()">Generate Hooks</button>
+              </div>
+              <div class="tool-output" id="output-hooks">
+                <div class="tool-output-title">Top Picks</div>
+                <div class="hook-top-picks" id="hooks-top"></div>
+                <div class="tool-output-title" style="margin-top:14px">All Variations</div>
+                <div class="hook-top-picks" id="hooks-all"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- POST GRADER -->
+          <div class="tool-panel" id="tool-grade">
+            <div class="tool-header" onclick="toggleTool('grade')">
+              <div class="tool-icon">📊</div>
+              <div class="tool-info">
+                <div class="tool-name">Post Grader</div>
+                <div class="tool-desc">Score any post across 5 dimensions. Pass threshold is 38/50. Fails trigger specific rewrite directives.</div>
+              </div>
+              <span class="tool-chevron" id="chevron-grade">▼</span>
+            </div>
+            <div class="tool-body" id="body-grade">
+              <div class="tool-form">
+                <div class="tool-field">
+                  <label>Post Text</label>
+                  <textarea id="grade-post" placeholder="Paste your LinkedIn post here..."></textarea>
+                </div>
+                <button class="btn-tool-run" id="btn-run-grade" onclick="runPostGrader()">Grade Post</button>
+              </div>
+              <div class="tool-output" id="output-grade">
+                <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px">
+                  <div class="grade-total" id="grade-total">—/50</div>
+                  <span class="grade-verdict" id="grade-verdict"></span>
+                </div>
+                <div class="grade-scorecard" id="grade-scorecard"></div>
+                <div class="grade-diagnosis" id="grade-diagnosis" style="display:none"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REVERSE ENGINEERING -->
+          <div class="tool-panel" id="tool-reverse">
+            <div class="tool-header" onclick="toggleTool('reverse')">
+              <div class="tool-icon">🔬</div>
+              <div class="tool-info">
+                <div class="tool-name">Reverse Engineering</div>
+                <div class="tool-desc">Pull top performing posts in your niche and extract reusable structural frameworks.</div>
+              </div>
+              <span class="tool-chevron" id="chevron-reverse">▼</span>
+            </div>
+            <div class="tool-body" id="body-reverse">
+              <div class="tool-form">
+                <div class="tool-field">
+                  <label>Keyword (optional — defaults to your first research keyword)</label>
+                  <input type="text" id="reverse-keyword" placeholder="e.g. signal-based outbound Clay B2B" />
+                </div>
+                <button class="btn-tool-run" id="btn-run-reverse" onclick="runReverseEngineer()">Fetch &amp; Analyze</button>
+              </div>
+              <div class="tool-output" id="output-reverse">
+                <div class="tool-output-title">Text Post Frameworks</div>
+                <div class="framework-cards" id="reverse-text"></div>
+                <div class="tool-output-title" style="margin-top:14px">Visual Post Frameworks</div>
+                <div class="framework-cards" id="reverse-visual"></div>
+                <div style="font-size:11px;color:#bbb;margin-top:10px" id="reverse-meta"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REPURPOSING ARCHIVE -->
+          <div class="tool-panel" id="tool-repurpose">
+            <div class="tool-header" onclick="toggleTool('repurpose')">
+              <div class="tool-icon">♻️</div>
+              <div class="tool-info">
+                <div class="tool-name">Repurposing Archive</div>
+                <div class="tool-desc">Pull your LinkedIn post history, find what worked, surface gaps, and generate refresh angles.</div>
+              </div>
+              <span class="tool-chevron" id="chevron-repurpose">▼</span>
+            </div>
+            <div class="tool-body" id="body-repurpose">
+              <div class="tool-form">
+                <div class="tool-field">
+                  <label>Your LinkedIn Profile URL</label>
+                  <input type="text" id="repurpose-url" placeholder="https://www.linkedin.com/in/your-username/" />
+                </div>
+                <button class="btn-tool-run" id="btn-run-repurpose" onclick="runRepurpose()">Analyze Archive</button>
+              </div>
+              <div class="tool-output" id="output-repurpose">
+                <div class="repurpose-section" id="repurpose-themes-section">
+                  <div class="repurpose-section-title">Signature Themes</div>
+                  <div id="repurpose-themes"></div>
+                </div>
+                <div class="repurpose-section" id="repurpose-top-section">
+                  <div class="repurpose-section-title">Top Posts</div>
+                  <div id="repurpose-top"></div>
+                </div>
+                <div class="repurpose-section" id="repurpose-gaps-section">
+                  <div class="repurpose-section-title">Content Gaps</div>
+                  <div id="repurpose-gaps"></div>
+                </div>
+                <div class="repurpose-section" id="repurpose-refresh-section">
+                  <div class="repurpose-section-title">Refresh Angles</div>
+                  <div id="repurpose-refresh"></div>
+                </div>
+                <div style="font-size:11px;color:#bbb;margin-top:6px" id="repurpose-meta"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </section>
 
@@ -2260,6 +2513,209 @@ function checkLogin() {
 
 if (sessionStorage.getItem(LOGIN_KEY) === '1') {
   document.getElementById('login-gate').classList.add('hidden');
+}
+
+// ─── TOOLS ───────────────────────────────────────────────────────
+function toggleTool(name) {
+  const body = document.getElementById('body-' + name);
+  const chevron = document.getElementById('chevron-' + name);
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
+function triggerClass(t) {
+  if (!t) return '';
+  const l = t.toLowerCase();
+  if (l.includes('desire')) return 'trigger-desire';
+  if (l.includes('curiosity')) return 'trigger-curiosity';
+  if (l.includes('fear')) return 'trigger-fear';
+  return '';
+}
+
+function useHookInStrategist(text) {
+  switchSection('strategist', document.querySelector('[data-section="strategist"]'));
+  const ta = document.getElementById('strategist-prompt');
+  if (ta) { ta.value = `Write a LinkedIn post using this hook:\n\n${text}\n\nDevelop the full post body.`; ta.focus(); }
+}
+
+// Hook Generator
+async function runHookGenerator() {
+  const btn = document.getElementById('btn-run-hooks');
+  const output = document.getElementById('output-hooks');
+  const topic = document.getElementById('hook-topic').value.trim();
+  if (!topic) { showToast('Enter a topic first'); return; }
+  btn.disabled = true; btn.textContent = 'Generating...';
+  output.classList.remove('visible');
+  try {
+    const data = await api('POST', '/api/tools/hooks', {
+      topic,
+      category: document.getElementById('hook-category').value,
+      goal: document.getElementById('hook-goal').value,
+      numbers: document.getElementById('hook-numbers').value,
+      reader: document.getElementById('hook-reader').value
+    });
+    renderHooks(data);
+    output.classList.add('visible');
+  } catch(e) { showToast(e.message || 'Hook generation failed'); }
+  finally { btn.disabled = false; btn.textContent = 'Generate Hooks'; }
+}
+
+function renderHooks(data) {
+  const topEl = document.getElementById('hooks-top');
+  const allEl = document.getElementById('hooks-all');
+  topEl.innerHTML = (data.topPicks || []).map((h, i) => `
+    <div class="hook-card">
+      <div class="hook-text">${esc(h.text)}</div>
+      <div class="hook-meta">
+        <span class="hook-trigger ${triggerClass(h.trigger)}">${esc(h.trigger || '')}</span>
+        <span class="hook-template">${esc(h.template || '')}</span>
+      </div>
+      ${h.reasoning ? `<div class="hook-reasoning">${esc(h.reasoning)}</div>` : ''}
+      <div class="hook-actions">
+        <button class="btn-hook-copy" onclick="navigator.clipboard.writeText(${JSON.stringify(h.text)});showToast('Copied')">Copy</button>
+        <button class="btn-hook-use" onclick="useHookInStrategist(${JSON.stringify(h.text)})">Use in Strategist →</button>
+      </div>
+    </div>`).join('');
+  allEl.innerHTML = (data.allHooks || []).map(h => `
+    <div class="hook-card all">
+      <div class="hook-text">${esc(h.text)}</div>
+      <div class="hook-meta">
+        <span class="hook-trigger ${triggerClass(h.trigger)}">${esc(h.trigger || '')}</span>
+      </div>
+      <div class="hook-actions">
+        <button class="btn-hook-copy" onclick="navigator.clipboard.writeText(${JSON.stringify(h.text)});showToast('Copied')">Copy</button>
+      </div>
+    </div>`).join('');
+}
+
+// Post Grader
+async function runPostGrader() {
+  const btn = document.getElementById('btn-run-grade');
+  const output = document.getElementById('output-grade');
+  const post = document.getElementById('grade-post').value.trim();
+  if (!post) { showToast('Paste a post first'); return; }
+  btn.disabled = true; btn.textContent = 'Grading...';
+  output.classList.remove('visible');
+  try {
+    const data = await api('POST', '/api/tools/grade', { post });
+    renderGrade(data);
+    output.classList.add('visible');
+  } catch(e) { showToast(e.message || 'Grading failed'); }
+  finally { btn.disabled = false; btn.textContent = 'Grade Post'; }
+}
+
+function renderGrade(data) {
+  const s = data.scores || {};
+  const total = data.total || Object.values(s).reduce((a,b) => a+b, 0);
+  const pass = data.verdict === 'PASS' || total >= 38;
+  document.getElementById('grade-total').textContent = `${total}/50`;
+  const vEl = document.getElementById('grade-verdict');
+  vEl.textContent = pass ? 'PASS' : 'NEEDS REVISION';
+  vEl.className = 'grade-verdict ' + (pass ? 'pass' : 'fail');
+  const dims = [['Hook Strength', s.hook], ['Clarity / Specificity', s.clarity], ['ICP Relevance', s.icp], ['Voice Match', s.voice], ['Conversion Intent', s.conversion]];
+  const barColors = { high: '#16a34a', mid: '#f59e0b', low: '#dc2626' };
+  document.getElementById('grade-scorecard').innerHTML = dims.map(([label, score]) => {
+    const n = score || 0;
+    const color = n >= 8 ? barColors.high : n >= 6 ? barColors.mid : barColors.low;
+    return `<div class="grade-row">
+      <div class="grade-label">${label}</div>
+      <div class="grade-bar-wrap"><div class="grade-bar" style="width:${n*10}%;background:${color}"></div></div>
+      <div class="grade-score">${n}/10</div>
+    </div>`;
+  }).join('');
+  const diag = data.diagnosis || {};
+  const diagEl = document.getElementById('grade-diagnosis');
+  if (diag.rootCause || diag.hypothesis || (diag.rewriteDirective && diag.rewriteDirective.length)) {
+    diagEl.style.display = 'block';
+    diagEl.innerHTML = `
+      <div class="grade-diag-title">Diagnosis</div>
+      ${diag.rootCause ? `<div class="grade-diag-item"><strong>Root Cause:</strong> ${esc(diag.rootCause)}</div>` : ''}
+      ${diag.hypothesis ? `<div class="grade-diag-item"><strong>Hypothesis:</strong> ${esc(diag.hypothesis)}</div>` : ''}
+      ${diag.rewriteDirective && diag.rewriteDirective.length ? `
+        <div class="grade-diag-title" style="margin-top:10px">Rewrite Directive</div>
+        <div class="grade-directive">${diag.rewriteDirective.map(d => `<div class="grade-directive-item">${esc(d)}</div>`).join('')}</div>` : ''}`;
+  } else { diagEl.style.display = 'none'; }
+}
+
+// Reverse Engineering
+async function runReverseEngineer() {
+  const btn = document.getElementById('btn-run-reverse');
+  const output = document.getElementById('output-reverse');
+  btn.disabled = true; btn.textContent = 'Fetching posts...';
+  output.classList.remove('visible');
+  try {
+    const kw = document.getElementById('reverse-keyword').value.trim();
+    const data = await api('POST', '/api/tools/reverse', kw ? { keyword: kw } : {});
+    renderReverse(data);
+    output.classList.add('visible');
+  } catch(e) { showToast(e.message || 'Reverse engineering failed'); }
+  finally { btn.disabled = false; btn.textContent = 'Fetch & Analyze'; }
+}
+
+function renderReverse(data) {
+  document.getElementById('reverse-meta').textContent = `Analyzed ${data.postsAnalyzed || '?'} posts for: "${data.keyword || ''}"`;
+  document.getElementById('reverse-text').innerHTML = (data.textFrameworks || []).map(f => `
+    <div class="framework-card text">
+      <div class="framework-title">${esc(f.formatLayer || 'Text Framework')}</div>
+      <div class="framework-meta">
+        <strong>Hook:</strong> ${esc(f.hookLayer || '')}<br>
+        <strong>Framework:</strong> ${esc(f.framework || '')}<br>
+        <strong>Mechanic:</strong> ${esc(f.engagementMechanic || '')}
+      </div>
+      <div class="framework-angle">Angle: ${esc(f.angle || '')}</div>
+      <span class="framework-pillar">${esc(f.pillar || '')}</span>
+    </div>`).join('');
+  document.getElementById('reverse-visual').innerHTML = (data.visualFrameworks || []).map(f => `
+    <div class="framework-card visual">
+      <div class="framework-title">${esc(f.frameworkType || 'Visual Framework')}: ${esc(f.conceptName || '')}</div>
+      <div class="framework-meta">${esc(f.bigIdea || '')}<br>${esc(f.conceptSentence || '')}</div>
+      <span class="framework-pillar">${esc(f.pillar || '')}</span>
+    </div>`).join('');
+}
+
+// Repurposing Archive
+async function runRepurpose() {
+  const btn = document.getElementById('btn-run-repurpose');
+  const output = document.getElementById('output-repurpose');
+  const url = document.getElementById('repurpose-url').value.trim();
+  if (!url) { showToast('Enter your LinkedIn profile URL'); return; }
+  btn.disabled = true; btn.textContent = 'Pulling archive...';
+  output.classList.remove('visible');
+  try {
+    const data = await api('POST', '/api/tools/repurpose', { profileUrl: url });
+    renderRepurpose(data);
+    output.classList.add('visible');
+  } catch(e) { showToast(e.message || 'Repurpose analysis failed'); }
+  finally { btn.disabled = false; btn.textContent = 'Analyze Archive'; }
+}
+
+function renderRepurpose(data) {
+  document.getElementById('repurpose-meta').textContent = `Analyzed ${data.postsAnalyzed || '?'} posts`;
+  document.getElementById('repurpose-themes').innerHTML = (data.signatureThemes || []).map(t => `<span class="tag-chip">${esc(t)}</span>`).join('');
+  document.getElementById('repurpose-top').innerHTML = (data.topPosts || []).map(p => `
+    <div class="repurpose-card">
+      <div class="repurpose-card-title">${esc(p.preview || '')}</div>
+      <div class="repurpose-card-meta">${esc(p.hookType || '')} · ${esc(p.structure || '')} · ${p.engagementScore || 0} engagement</div>
+    </div>`).join('');
+  document.getElementById('repurpose-gaps').innerHTML = (data.gaps || []).map(g => `
+    <div class="repurpose-card">
+      <div class="repurpose-card-meta">${esc(g)}</div>
+    </div>`).join('');
+  document.getElementById('repurpose-refresh').innerHTML = (data.refreshAngles || []).map((r, i) => `
+    <div class="repurpose-card">
+      <div class="repurpose-card-title">${esc(r.originalPreview || '')}</div>
+      <div class="repurpose-card-angle">→ ${esc(r.newAngle || '')}</div>
+      <button class="btn-use-angle" onclick="addAngleToIdeas(${JSON.stringify(r.newAngle || '')})">Add to Ideas →</button>
+    </div>`).join('');
+}
+
+async function addAngleToIdeas(angle) {
+  const idea = { id: String(Date.now()), hook: angle, body: '', status: 'idea', tags: ['repurposed'], createdAt: new Date().toISOString() };
+  IDEAS.push(idea);
+  await api('POST', '/api/ideas', idea);
+  renderIdeasGrid();
+  renderIdeasBadge();
+  showToast('Added to Ideas Lab');
 }
 
 // ─── START ────────────────────────────────────────────────────────
