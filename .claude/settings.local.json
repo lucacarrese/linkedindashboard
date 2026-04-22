@@ -9,7 +9,8 @@
       "Bash(gh api:*)",
       "Bash(python3 -c \"import sys,json; print\\(json.load\\(sys.stdin\\)\\)\")",
       "Bash(curl -s http://localhost:3000/api/strategist)",
-      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'{len\\(d\\)} strategist skill\\(s\\): {[s[\\\\\"name\\\\\"] for s in d]}'\\)\")"
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'{len\\(d\\)} strategist skill\\(s\\): {[s[\\\\\"name\\\\\"] for s in d]}'\\)\")",
+      "Bash(textutil -convert txt -stdout \"/Users/lucafelix/Downloads/Post examples_.docx\")"
     ]
   }
 }

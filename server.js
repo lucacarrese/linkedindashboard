@@ -14,6 +14,7 @@ const SKILLS_DIR = path.join(__dirname, 'skills');
 const EXAMPLES_DIR = path.join(__dirname, 'examples');
 const CONTEXT_DIR = path.join(__dirname, 'context');
 const STRATEGIST_FILE = path.join(DATA_DIR, 'strategist.json');
+const CLIENT_CONTEXT_DIR = process.env.CLIENT_CONTEXT_DIR || null;
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
@@ -172,7 +173,18 @@ app.post('/api/generate', async (req, res) => {
     return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set. Add it to your .env file and Railway environment variables.' });
   }
 
-  // Build system prompt from all skills
+  // ── Foundation context (voice, ICP, pillars) ──────────────────
+  const foundationParts = [];
+  if (CLIENT_CONTEXT_DIR) {
+    const voiceProfile = readMD(path.join(CLIENT_CONTEXT_DIR, 'voice-profile.md'));
+    const icp = readMD(path.join(CLIENT_CONTEXT_DIR, 'icp.md'));
+    const pillars = readMD(path.join(CLIENT_CONTEXT_DIR, 'content-pillars.md'));
+    if (voiceProfile) foundationParts.push(`# VOICE PROFILE\n\n${voiceProfile}`);
+    if (icp) foundationParts.push(`# ICP — IDEAL BUYER\n\n${icp}`);
+    if (pillars) foundationParts.push(`# CONTENT PILLARS\n\n${pillars}`);
+  }
+
+  // ── Skills context (writing rules, patterns, strategist) ──────
   const skillParts = [];
 
   // 1. Always load anti-AI writing style first
@@ -225,11 +237,11 @@ app.post('/api/generate', async (req, res) => {
     if (s.content && selected) skillParts.push(`# ${s.name.toUpperCase()}\n\n${s.content}`);
   });
 
-  const systemPrompt = `You are a LinkedIn content writer for Luca Carrese, founder of ColdIQ — a B2B outbound sales agency at $7M ARR.
+  const allContext = [...foundationParts, ...skillParts].join('\n\n---\n\n');
 
-Your job is to write high-performing LinkedIn posts for Luca's personal brand. Every post must follow the rules below exactly.
+  const systemPrompt = `You are writing LinkedIn posts as Luca Carrese. Follow the voice profile, ICP, and writing rules below exactly — they define who Luca is, who he's writing for, and how he writes.
 
-${skillParts.join('\n\n---\n\n')}
+${allContext}
 
 ---
 
@@ -275,12 +287,17 @@ OUTPUT FORMAT:
     });
 
     stream.on('error', (err) => {
-      res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
-      res.end();
+      if (!res.headersSent) res.status(500).json({ error: err.message });
+      else { res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`); res.end(); }
+    });
+
+    // Catch promise-based errors from the stream
+    stream.finalMessage().catch((err) => {
+      console.error('[stream finalMessage error]', err.message);
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    if (!res.headersSent) res.status(500).json({ error: err.message });
   }
 });
 
@@ -308,6 +325,14 @@ app.delete('/api/strategist/:id', (req, res) => {
   skills = skills.filter(s => s.id !== req.params.id);
   writeJSON(STRATEGIST_FILE, skills);
   res.json({ ok: true });
+});
+
+// ─── GLOBAL ERROR SAFETY ────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err.message, err.stack);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason);
 });
 
 // ─── START ──────────────────────────────────────────────────────
