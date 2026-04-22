@@ -1,3 +1,4 @@
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -14,10 +15,20 @@ const SKILLS_DIR = path.join(__dirname, 'skills');
 const EXAMPLES_DIR = path.join(__dirname, 'examples');
 const CONTEXT_DIR = path.join(__dirname, 'context');
 const STRATEGIST_FILE = path.join(DATA_DIR, 'strategist.json');
-const CLIENT_CONTEXT_DIR = process.env.CLIENT_CONTEXT_DIR || null;
+const IDEAS_SETTINGS_FILE = path.join(DATA_DIR, 'ideas-settings.json');
+const CLIENT_CONTEXT_DIR = process.env.CLIENT_CONTEXT_DIR || path.join(__dirname, 'client', 'luca');
+
+const DEFAULT_IDEAS_SETTINGS = {
+  keywords: [
+    'signal-based outbound Clay list building B2B',
+    'Claude Code GTM automation sales workflow',
+    'AI agents outbound sales pipeline'
+  ],
+  profiles: []
+};
 
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ─── HELPERS ────────────────────────────────────────────────────
 function readJSON(file, defaultVal = []) {
@@ -298,6 +309,129 @@ OUTPUT FORMAT:
 
   } catch (err) {
     if (!res.headersSent) res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── IDEAS SETTINGS ─────────────────────────────────────────────
+app.get('/api/ideas/settings', (req, res) => {
+  res.json(readJSON(IDEAS_SETTINGS_FILE, DEFAULT_IDEAS_SETTINGS));
+});
+
+app.post('/api/ideas/settings', (req, res) => {
+  const { keywords, profiles } = req.body;
+  const settings = {
+    keywords: Array.isArray(keywords) ? keywords.filter(k => k.trim()) : DEFAULT_IDEAS_SETTINGS.keywords,
+    profiles: Array.isArray(profiles) ? profiles.filter(p => p.trim()) : []
+  };
+  writeJSON(IDEAS_SETTINGS_FILE, settings);
+  res.json({ ok: true });
+});
+
+// ─── IDEAS GENERATE ─────────────────────────────────────────────
+app.post('/api/ideas/generate', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your_api_key_here') {
+    return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  }
+
+  const apifyKey = process.env.APIFY_API_KEY;
+  const pillarsContent = CLIENT_CONTEXT_DIR ? readMD(path.join(CLIENT_CONTEXT_DIR, 'content-pillars.md')) : null;
+  const icpContent     = CLIENT_CONTEXT_DIR ? readMD(path.join(CLIENT_CONTEXT_DIR, 'icp.md')) : null;
+
+  const ideasSettings = readJSON(IDEAS_SETTINGS_FILE, DEFAULT_IDEAS_SETTINGS);
+  const searchKeywords = ideasSettings.keywords.length ? ideasSettings.keywords : DEFAULT_IDEAS_SETTINGS.keywords;
+  const profileUrls    = ideasSettings.profiles || [];
+
+  // ── Source 1: LinkedIn keyword search via Apify ──
+  let linkedinSignals = [];
+  if (apifyKey) {
+    const apifyResults = await Promise.allSettled(
+      searchKeywords.map(kw =>
+        fetch(
+          `https://api.apify.com/v2/acts/datadoping~linkedin-posts-search-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=45`,
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: [kw], maxResults: 5 }) }
+        ).then(r => r.json()).catch(() => [])
+      )
+    );
+    linkedinSignals = apifyResults
+      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
+      .flatMap(r => r.value)
+      .slice(0, 12)
+      .map(post => ({
+        source: 'LinkedIn',
+        text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
+        author: post.author?.name || post.author?.headline || ''
+      }))
+      .filter(s => s.text.length > 30);
+  }
+
+  // ── Source 1b: LinkedIn profile posts via Apify ──
+  let profileSignals = [];
+  if (apifyKey && profileUrls.length) {
+    try {
+      const profileRes = await fetch(
+        `https://api.apify.com/v2/acts/datadoping~linkedin-profile-posts-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=60`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profiles: profileUrls, maxPosts: 5 }) }
+      );
+      const profileData = await profileRes.json().catch(() => []);
+      if (Array.isArray(profileData)) {
+        profileSignals = profileData
+          .slice(0, 10)
+          .map(post => ({
+            source: 'LinkedIn Profile',
+            text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
+            author: post.author?.name || post.authorName || ''
+          }))
+          .filter(s => s.text.length > 30);
+      }
+    } catch { /* profile scrape optional */ }
+  }
+
+  // ── Source 2: Reddit (ICP pain language from relevant subreddits) ──
+  let redditSignals = [];
+  const redditSubs = ['sales', 'SaaS', 'Entrepreneur', 'startups'];
+  const redditResults = await Promise.allSettled(
+    redditSubs.map(sub =>
+      fetch(`https://www.reddit.com/r/${sub}/top.json?limit=5&t=week`, {
+        headers: { 'User-Agent': 'ContentResearchBot/1.0' }
+      }).then(r => r.ok ? r.json() : null).catch(() => null)
+    )
+  );
+  redditSignals = redditResults
+    .filter(r => r.status === 'fulfilled' && r.value?.data?.children?.length)
+    .flatMap(r => r.value.data.children)
+    .map(p => ({
+      source: 'Reddit',
+      text: `${p.data.title}${p.data.selftext ? ' — ' + p.data.selftext.slice(0, 200) : ''}`.replace(/\n+/g, ' '),
+      author: `r/${p.data.subreddit}`
+    }))
+    .filter(s => s.text.length > 20)
+    .slice(0, 8);
+
+  const allSignals = [...linkedinSignals, ...profileSignals, ...redditSignals];
+
+  const signalsBlock = allSignals.length > 0
+    ? allSignals.map((s, i) => `[${i + 1}] [${s.source}]${s.author ? ` (${s.author})` : ''} ${s.text}`).join('\n\n')
+    : 'No live signals available — base ideas purely on content pillars.';
+
+  const systemPrompt = `You are a LinkedIn content strategist for Luca Carrese, founder of ColdIQ — B2B outbound sales agency at $7M ARR.\n${pillarsContent ? `\n## CONTENT PILLARS\n${pillarsContent}` : ''}${icpContent ? `\n## ICP\n${icpContent}` : ''}`;
+
+  const userPrompt = `Here are live signals from LinkedIn and Reddit in Luca's niche right now:\n\n${signalsBlock}\n\nBased on these signals AND the content pillars, generate exactly 8 post ideas for Luca.\n\nRules:\n- Each idea needs a specific angle, not just a topic\n- Spread across all 3 content pillars (at least 2 per pillar)\n- At least 3 ideas must target Tier 1 ICP pain points directly\n- Hooks must follow Luca's voice: specific number, conclusion-first, no hedging\n\nReturn a raw JSON array of exactly 8 objects. No markdown fences, no explanation — only the JSON array.\n\nEach object must have exactly these fields:\n{\n  "hook": "The exact hook line — specific, numbered, conclusion-first",\n  "angle": "2-3 sentences on what the post covers and what makes it valuable",\n  "pillar": "GTM Systems" | "Claude Code for GTM" | "AI Agents for Sales",\n  "icpTier": "Tier 1" | "Tier 2" | "Tier 3",\n  "postType": "How-to" | "Story" | "Framework" | "Contrarian" | "Social proof" | "Lead magnet",\n  "signal": "One line on which live signal this is grounded in, or 'Content pillar — no live signal'"\n}`;
+
+  try {
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const message = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    });
+    let ideas = [];
+    const raw = message.content[0].text.trim();
+    try { ideas = JSON.parse(raw); }
+    catch { const m = raw.match(/\[[\s\S]*\]/); if (m) ideas = JSON.parse(m[0]); }
+    res.json({ ideas, signalCount: allSignals.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

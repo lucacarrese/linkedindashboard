@@ -255,6 +255,93 @@
     .btn-del-idea { font-size: 12px; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; background: #fdecea; color: #c0392b; transition: all 0.12s; }
     .btn-del-idea:hover { background: #f5c0bb; }
 
+    /* ─── AI IDEAS ──────────────────────────────────────── */
+    .ai-ideas-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .ai-ideas-title { font-size: 14px; font-weight: 700; color: #1d1d1d; display: flex; align-items: center; gap: 8px; }
+    .ai-ideas-count { font-size: 11px; font-weight: 700; background: #f3e8ff; color: #7e22ce; padding: 2px 8px; border-radius: 10px; }
+    .ai-ideas-meta { font-size: 11px; color: #bbb; }
+    .ai-idea-card {
+      background: white; border-radius: 10px; padding: 16px;
+      border: 1px solid #e8d5f5; border-top: 3px solid #9333ea;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.13s; display: flex; flex-direction: column;
+    }
+    .ai-idea-card:hover { border-color: #c084fc; box-shadow: 0 4px 12px rgba(147,51,234,0.1); }
+    .ai-idea-hook { font-size: 14px; font-weight: 700; color: #1d1d1d; margin-bottom: 8px; line-height: 1.3; }
+    .ai-idea-angle { font-size: 12px; color: #666; line-height: 1.6; flex: 1; margin-bottom: 10px; }
+    .ai-idea-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+    .ai-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .badge-pillar-gtm    { background: #dcfce7; color: #166534; }
+    .badge-pillar-claude { background: #dbeafe; color: #1d4ed8; }
+    .badge-pillar-ai     { background: #fef3e8; color: #c05621; }
+    .badge-tier-1 { background: #fce7f3; color: #be185d; }
+    .badge-tier-2 { background: #f3f4f6; color: #374151; }
+    .badge-tier-3 { background: #f3f4f6; color: #9ca3af; }
+    .badge-posttype { background: #f0f0f0; color: #555; }
+    .ai-idea-signal { font-size: 11px; color: #bbb; font-style: italic; padding-top: 8px; border-top: 1px solid #f5f5f5; margin-bottom: 10px; }
+    .ai-idea-actions { display: flex; gap: 6px; padding-top: 10px; border-top: 1px solid #f5f5f5; }
+    .btn-save-ai { flex: 1; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 6px; border: 1px solid #e0e0e0; cursor: pointer; background: white; color: #555; transition: all 0.12s; }
+    .btn-save-ai:hover { background: #f5f5f5; }
+    .btn-develop { flex: 2; font-size: 12px; font-weight: 700; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; background: #9333ea; color: white; transition: background 0.12s; }
+    .btn-develop:hover { background: #7e22ce; }
+    .ai-loading {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 48px 24px; margin-bottom: 24px; background: white;
+      border-radius: 12px; border: 1px dashed #e0d5f5;
+    }
+    .ai-loading-spinner {
+      width: 30px; height: 30px; border: 3px solid #f0e8ff; border-top-color: #9333ea;
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ai-loading-text { font-size: 13px; color: #888; }
+    .btn-gen-ideas {
+      background: #9333ea; color: white; border: none; border-radius: 20px;
+      padding: 7px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.13s;
+    }
+    .btn-gen-ideas:hover { background: #7e22ce; }
+    .btn-gen-ideas:disabled { background: #d0b5f5; cursor: not-allowed; }
+
+    /* ─── RESEARCH SETTINGS ─────────────────────────────── */
+    .research-settings {
+      background: white; border-radius: 12px; border: 1px solid #e8e8e8;
+      margin-bottom: 20px; overflow: hidden;
+    }
+    .research-settings-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; cursor: pointer; user-select: none;
+    }
+    .research-settings-header:hover { background: #fafafa; }
+    .research-settings-title { font-size: 13px; font-weight: 700; color: #444; display: flex; align-items: center; gap: 8px; }
+    .research-settings-toggle { font-size: 11px; color: #aaa; transition: transform 0.2s; }
+    .research-settings-toggle.open { transform: rotate(180deg); }
+    .research-settings-body { padding: 0 16px 16px; border-top: 1px solid #f0f0f0; display: none; }
+    .research-settings-body.open { display: block; }
+    .rs-section-title { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.4px; margin: 14px 0 8px; }
+    .rs-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+    .rs-item { display: flex; align-items: center; gap: 8px; }
+    .rs-item input {
+      flex: 1; font-size: 12px; padding: 6px 10px; border: 1px solid #e0e0e0;
+      border-radius: 6px; outline: none; font-family: inherit; color: #333;
+    }
+    .rs-item input:focus { border-color: #9333ea; }
+    .btn-rs-remove {
+      flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; border: none;
+      background: #f5f5f5; color: #999; cursor: pointer; font-size: 14px; line-height: 1;
+      display: flex; align-items: center; justify-content: center; transition: all 0.12s;
+    }
+    .btn-rs-remove:hover { background: #fee2e2; color: #dc2626; }
+    .btn-rs-add {
+      font-size: 12px; font-weight: 600; color: #9333ea; background: none; border: 1px dashed #d0b5f5;
+      border-radius: 6px; padding: 5px 12px; cursor: pointer; width: 100%; transition: all 0.12s;
+    }
+    .btn-rs-add:hover { background: #faf5ff; border-color: #9333ea; }
+    .btn-rs-save {
+      margin-top: 14px; width: 100%; padding: 8px; border-radius: 8px; border: none;
+      background: #1d1d1d; color: white; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.12s;
+    }
+    .btn-rs-save:hover { background: #333; }
+    .rs-saved-msg { font-size: 11px; color: #16a34a; text-align: center; margin-top: 6px; display: none; }
+
     /* ─── SKILLS ─────────────────────────────────────────── */
     .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
     .skill-card {
@@ -645,9 +732,50 @@
     <section class="section" id="section-ideas">
       <div class="topbar">
         <div class="topbar-title">Ideas Lab</div>
-        <div class="topbar-actions"><span class="topbar-sub">Capture hooks before they become posts</span></div>
+        <div class="topbar-actions">
+          <button class="btn-gen-ideas" id="gen-ideas-btn" onclick="generateIdeas()">⚡ Generate Ideas</button>
+        </div>
       </div>
       <div class="section-body">
+
+        <!-- Research Settings -->
+        <div class="research-settings">
+          <div class="research-settings-header" onclick="toggleResearchSettings()">
+            <div class="research-settings-title">
+              <span>Research Settings</span>
+            </div>
+            <span class="research-settings-toggle" id="rs-toggle">▼</span>
+          </div>
+          <div class="research-settings-body" id="rs-body">
+            <div class="rs-section-title">Search Keywords</div>
+            <div class="rs-list" id="rs-keywords-list"></div>
+            <button class="btn-rs-add" onclick="rsAddKeyword()">+ Add keyword</button>
+
+            <div class="rs-section-title">LinkedIn Profiles to Scrape</div>
+            <div class="rs-list" id="rs-profiles-list"></div>
+            <button class="btn-rs-add" onclick="rsAddProfile()">+ Add profile URL</button>
+
+            <button class="btn-rs-save" onclick="saveResearchSettings()">Save Settings</button>
+            <div class="rs-saved-msg" id="rs-saved-msg">Saved!</div>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="ai-ideas-loading" style="display:none" class="ai-loading">
+          <div class="ai-loading-spinner"></div>
+          <div class="ai-loading-text">Scanning LinkedIn for live signals across your content pillars...</div>
+        </div>
+
+        <!-- AI-generated ideas -->
+        <div id="ai-ideas-section" style="display:none; margin-bottom:24px">
+          <div class="ai-ideas-header">
+            <div class="ai-ideas-title">⚡ Generated Ideas <span class="ai-ideas-count" id="ai-ideas-count"></span></div>
+            <div class="ai-ideas-meta" id="ai-ideas-meta"></div>
+          </div>
+          <div class="ideas-grid" id="ai-ideas-grid"></div>
+        </div>
+
+        <!-- Manual capture -->
         <div class="ideas-capture">
           <div class="ideas-capture-title">💡 New Idea</div>
           <input type="text" class="idea-hook-input" id="idea-hook" placeholder="What's the hook or angle?" />
@@ -1020,6 +1148,7 @@ async function init() {
   }
   renderAll();
   checkMonthlyPrompt();
+  loadResearchSettings();
 }
 
 function setSidebarStatus(text, ok) {
@@ -1269,6 +1398,169 @@ async function convertIdeaToPost(id) {
   renderSidebarStats();
   openPost(newId);
   showToast('Idea converted to draft post');
+}
+
+// ─── RESEARCH SETTINGS ──────────────────────────────────────────
+let RS_SETTINGS = { keywords: [], profiles: [] };
+
+async function loadResearchSettings() {
+  try {
+    const data = await api('GET', '/api/ideas/settings');
+    RS_SETTINGS = data;
+    renderRSLists();
+  } catch {}
+}
+
+function renderRSLists() {
+  const kList = document.getElementById('rs-keywords-list');
+  const pList = document.getElementById('rs-profiles-list');
+  if (!kList || !pList) return;
+  kList.innerHTML = RS_SETTINGS.keywords.map((k, i) => `
+    <div class="rs-item">
+      <input type="text" value="${esc(k)}" oninput="RS_SETTINGS.keywords[${i}]=this.value" placeholder="e.g. signal-based outbound Clay" />
+      <button class="btn-rs-remove" onclick="rsRemoveKeyword(${i})">×</button>
+    </div>`).join('');
+  pList.innerHTML = RS_SETTINGS.profiles.map((p, i) => `
+    <div class="rs-item">
+      <input type="text" value="${esc(p)}" oninput="RS_SETTINGS.profiles[${i}]=this.value" placeholder="https://www.linkedin.com/in/username/" />
+      <button class="btn-rs-remove" onclick="rsRemoveProfile(${i})">×</button>
+    </div>`).join('');
+}
+
+function rsAddKeyword() {
+  RS_SETTINGS.keywords.push('');
+  renderRSLists();
+  const inputs = document.querySelectorAll('#rs-keywords-list input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function rsAddProfile() {
+  RS_SETTINGS.profiles.push('');
+  renderRSLists();
+  const inputs = document.querySelectorAll('#rs-profiles-list input');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function rsRemoveKeyword(i) {
+  RS_SETTINGS.keywords.splice(i, 1);
+  renderRSLists();
+}
+
+function rsRemoveProfile(i) {
+  RS_SETTINGS.profiles.splice(i, 1);
+  renderRSLists();
+}
+
+async function saveResearchSettings() {
+  const settings = {
+    keywords: RS_SETTINGS.keywords.filter(k => k.trim()),
+    profiles: RS_SETTINGS.profiles.filter(p => p.trim())
+  };
+  await api('POST', '/api/ideas/settings', settings);
+  RS_SETTINGS = settings;
+  const msg = document.getElementById('rs-saved-msg');
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 2000);
+}
+
+function toggleResearchSettings() {
+  const body = document.getElementById('rs-body');
+  const toggle = document.getElementById('rs-toggle');
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+// ─── IDEAS GENERATE ──────────────────────────────────────────────
+let AI_IDEAS = [];
+
+async function generateIdeas() {
+  const btn     = document.getElementById('gen-ideas-btn');
+  const loading = document.getElementById('ai-ideas-loading');
+  const section = document.getElementById('ai-ideas-section');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  loading.style.display = 'flex';
+  section.style.display = 'none';
+  try {
+    const res = await fetch('/api/ideas/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Generation failed'); }
+    const data = await res.json();
+    AI_IDEAS = data.ideas || [];
+    renderAIIdeas(data.signalCount || 0);
+    showToast(`${AI_IDEAS.length} ideas generated`);
+  } catch(e) {
+    showToast(e.message || 'Failed — check server logs');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚡ Generate Ideas';
+    loading.style.display = 'none';
+  }
+}
+
+function pillarClass(p) {
+  if (!p) return 'badge-pillar-gtm';
+  if (p.includes('GTM')) return 'badge-pillar-gtm';
+  if (p.includes('Claude')) return 'badge-pillar-claude';
+  return 'badge-pillar-ai';
+}
+
+function tierClass(t) {
+  if (t === 'Tier 1') return 'badge-tier-1';
+  if (t === 'Tier 2') return 'badge-tier-2';
+  return 'badge-tier-3';
+}
+
+function renderAIIdeas(signalCount) {
+  const section = document.getElementById('ai-ideas-section');
+  const grid    = document.getElementById('ai-ideas-grid');
+  document.getElementById('ai-ideas-count').textContent = AI_IDEAS.length + ' ideas';
+  document.getElementById('ai-ideas-meta').textContent  = signalCount > 0 ? `Based on ${signalCount} live signals (LinkedIn + Reddit)` : 'Based on content pillars';
+  if (!AI_IDEAS.length) { section.style.display = 'none'; return; }
+  grid.innerHTML = AI_IDEAS.map((idea, i) => `
+    <div class="ai-idea-card" id="ai-card-${i}">
+      <div class="ai-idea-hook">${esc(idea.hook)}</div>
+      <div class="ai-idea-angle">${esc(idea.angle)}</div>
+      <div class="ai-idea-badges">
+        <span class="ai-badge ${pillarClass(idea.pillar)}">${esc(idea.pillar || '')}</span>
+        <span class="ai-badge ${tierClass(idea.icpTier)}">${esc(idea.icpTier || '')}</span>
+        <span class="ai-badge badge-posttype">${esc(idea.postType || '')}</span>
+      </div>
+      ${idea.signal ? `<div class="ai-idea-signal">${esc(idea.signal)}</div>` : ''}
+      <div class="ai-idea-actions">
+        <button class="btn-save-ai" onclick="saveAIIdea(${i})">Save →</button>
+        <button class="btn-develop" onclick="developIdea(${i})">Develop in Strategist →</button>
+      </div>
+    </div>`).join('');
+  section.style.display = 'block';
+}
+
+async function saveAIIdea(i) {
+  const idea = AI_IDEAS[i];
+  if (!idea) return;
+  const obj = {
+    id: 'idea_' + Date.now(),
+    hook: idea.hook,
+    body: idea.angle + (idea.signal && !idea.signal.includes('no live signal') ? `\n\nSignal: ${idea.signal}` : ''),
+    tags: [idea.pillar, idea.icpTier, idea.postType].filter(Boolean),
+    date: fmtDisplay(fmtDate(new Date()))
+  };
+  IDEAS.unshift(obj);
+  await api('POST', '/api/ideas', obj);
+  AI_IDEAS.splice(i, 1);
+  renderAIIdeas(0);
+  renderIdeasGrid();
+  renderIdeasBadge();
+  showToast('Idea saved to lab');
+}
+
+function developIdea(i) {
+  const idea = AI_IDEAS[i];
+  if (!idea) return;
+  const prompt = `Write a LinkedIn post based on this idea:\n\nHook: ${idea.hook}\n\nAngle: ${idea.angle}\n\nPost type: ${idea.postType}\nTarget: ${idea.icpTier}`;
+  switchSection('strategist', document.querySelector('[data-section="strategist"]'));
+  document.getElementById('strat-prompt').value = prompt;
+  document.getElementById('strat-prompt').focus();
+  showToast('Idea loaded into Strategist');
 }
 
 // ─── SKILLS ──────────────────────────────────────────────────────
