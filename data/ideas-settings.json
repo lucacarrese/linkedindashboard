@@ -1,8 +1,16 @@
 {
   "keywords": [
     "signal-based outbound Clay list building B2B",
-    "Claude Code GTM automation sales workflow",
+    "Claude Code GTM automation sales workflow ",
     "AI agents outbound sales pipeline"
   ],
-  "profiles": []
+  "profiles": [],
+  "sources": {
+    "linkedin": true,
+    "linkedinProfiles": true,
+    "reddit": true,
+    "googleNews": true,
+    "hackerNews": true,
+    "twitter": true
+  }
 }
