@@ -30,7 +30,8 @@ const DEFAULT_IDEAS_SETTINGS = {
     linkedinProfiles: true,
     reddit: true,
     googleNews: true,
-    hackerNews: true
+    hackerNews: true,
+    twitter: false
   }
 };
 
@@ -418,6 +419,9 @@ app.post('/api/ideas/generate', async (req, res) => {
       .slice(0, 8);
   }
 
+  const tenDaysAgo = Date.now() - 10 * 24 * 60 * 60 * 1000;
+  const tenDaysAgoSec = Math.floor(tenDaysAgo / 1000);
+
   // ── Source 3: Google News RSS ──
   let googleNewsSignals = [];
   if (sources.googleNews) {
@@ -434,11 +438,14 @@ app.post('/api/ideas/generate', async (req, res) => {
       .filter(r => r.status === 'fulfilled' && r.value)
       .flatMap(r => {
         const items = r.value.match(/<item>([\s\S]*?)<\/item>/g) || [];
-        return items.slice(0, 4).map(item => {
+        return items.map(item => {
           const title = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1] || '';
+          const pubDate = (item.match(/<pubDate>(.*?)<\/pubDate>/))?.[1] || '';
+          const published = pubDate ? new Date(pubDate).getTime() : 0;
+          if (published && published < tenDaysAgo) return null;
           const clean = title.replace(/ - [^-]+$/, '').trim();
           return { source: 'Google News', text: clean, author: '' };
-        }).filter(s => s.text.length > 20);
+        }).filter(s => s && s.text.length > 20);
       })
       .slice(0, 6);
   }
@@ -446,12 +453,12 @@ app.post('/api/ideas/generate', async (req, res) => {
   // ── Source 4: Hacker News ──
   let hnSignals = [];
   if (sources.hackerNews) {
-    const sevenDaysAgo = Math.floor(Date.now() / 1000) - 7 * 86400;
+    const sevenDaysAgoSec = tenDaysAgoSec;
     const hnKeywords = ['B2B outbound sales', 'AI sales automation', 'GTM strategy'];
     const hnResults = await Promise.allSettled(
       hnKeywords.map(kw => {
         const q = encodeURIComponent(kw);
-        return fetch(`https://hn.algolia.com/api/v1/search?tags=story&query=${q}&numericFilters=created_at_i>${sevenDaysAgo}&hitsPerPage=5`)
+        return fetch(`https://hn.algolia.com/api/v1/search?tags=story&query=${q}&numericFilters=created_at_i>${sevenDaysAgoSec}&hitsPerPage=5`)
           .then(r => r.ok ? r.json() : null).catch(() => null);
       })
     );
@@ -467,7 +474,43 @@ app.post('/api/ideas/generate', async (req, res) => {
       .slice(0, 5);
   }
 
-  const allSignals = [...linkedinSignals, ...profileSignals, ...redditSignals, ...googleNewsSignals, ...hnSignals];
+  // ── Source 5: X/Twitter via Apify ──
+  let twitterSignals = [];
+  if (apifyKey && sources.twitter) {
+    try {
+      const twRes = await fetch(
+        `https://api.apify.com/v2/acts/apidojo~tweet-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=60`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            searchTerms: searchKeywords.slice(0, 2),
+            maxTweets: 10,
+            queryType: 'Latest',
+            ...(process.env.X_COOKIES ? { cookies: process.env.X_COOKIES } : {})
+          })
+        }
+      );
+      const twData = await twRes.json().catch(() => []);
+      if (Array.isArray(twData)) {
+        twitterSignals = twData
+          .filter(t => {
+            const created = t.createdAt || t.created_at || t.tweet?.createdAt || '';
+            if (!created) return true;
+            return new Date(created).getTime() >= tenDaysAgo;
+          })
+          .slice(0, 8)
+          .map(t => ({
+            source: 'X/Twitter',
+            text: (t.text || t.full_text || t.tweet?.text || '').slice(0, 300).replace(/\n+/g, ' '),
+            author: t.author?.userName || t.user?.screen_name || t.authorName || ''
+          }))
+          .filter(s => s.text.length > 20);
+      }
+    } catch { /* Twitter optional */ }
+  }
+
+  const allSignals = [...linkedinSignals, ...profileSignals, ...redditSignals, ...googleNewsSignals, ...hnSignals, ...twitterSignals];
 
   const signalsBlock = allSignals.length > 0
     ? allSignals.map((s, i) => `[${i + 1}] [${s.source}]${s.author ? ` (${s.author})` : ''} ${s.text}`).join('\n\n')
