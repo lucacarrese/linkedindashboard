@@ -684,6 +684,8 @@
     .strat-output-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
     .strat-char-count { font-size: 11px; color: #bbb; }
     .strat-error { background: #fdecea; border: 1px solid #f5c0bb; border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #c0392b; }
+    #btn-design-visual { background: #f5f0ff; border-color: #ddd6fe; color: #6d28d9; }
+    #btn-design-visual:hover { background: #ede9fe; border-color: #c4b5fd; }
 
     @media (max-width: 900px) {
       .calendar-layout { grid-template-columns: 1fr; }
@@ -1016,6 +1018,7 @@
                 <span class="strat-output-label">Generated Post</span>
                 <div class="strat-output-actions">
                   <button class="btn btn-secondary" onclick="copyGeneratedPost()">Copy</button>
+                  <button class="btn btn-secondary" id="btn-design-visual" onclick="openClaudeDesign()">Design Visual</button>
                   <button class="btn btn-primary" onclick="saveGeneratedPost()">Save as Draft →</button>
                 </div>
               </div>
@@ -3009,6 +3012,50 @@ async function writeFullPost() {
     }
   } catch(e) { showToast(e.message || 'Write failed'); }
   finally { btn.disabled = false; btn.textContent = '✍️ Write Full Post'; }
+}
+
+// ─── CLAUDE DESIGN VISUAL ────────────────────────────────────────
+function openClaudeDesign() {
+  const post = document.getElementById('strat-output')?.textContent?.trim();
+  if (!post) { showToast('Generate a post first'); return; }
+
+  const firstLine = post.split('\n').find(l => l.trim()) || '';
+  const hook = firstLine.length > 120 ? firstLine.slice(0, 120) + '…' : firstLine;
+
+  const prompt = `Create a LinkedIn post visual for this post by Luca Carrese (founder of ColdIQ, B2B outbound sales agency):
+
+HOOK (use as headline):
+${hook}
+
+FULL POST:
+${post}
+
+VISUAL BRIEF:
+- Platform: LinkedIn feed image (1200x628px or square 1080x1080px)
+- Style: clean, minimal, professional — dark background (#0f0f0f or navy) with white/light text
+- Headline: pull the hook as large bold text, center-aligned
+- Subtext: 1-2 supporting lines from the post body (a key stat or insight)
+- Branding: "ColdIQ" small in corner, no logo needed
+- NO stock photos, NO faces — use geometric shapes, icons, or data callouts if needed
+- Vibe: practitioner sharing a real system, not a generic motivational post
+
+Make it thumb-stopping in a LinkedIn feed.`;
+
+  navigator.clipboard.writeText(prompt).then(() => {
+    showToast('Prompt copied — opening Claude Design, paste it there');
+    const btn = document.getElementById('btn-design-visual');
+    if (btn) { const orig = btn.textContent; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = orig, 2500); }
+    setTimeout(() => window.open('https://claude.ai/design', '_blank'), 400);
+  }).catch(() => {
+    // fallback: show the prompt in a modal-style alert the user can copy manually
+    const ta = document.createElement('textarea');
+    ta.value = prompt;
+    ta.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:80vw;height:60vh;z-index:9999;padding:12px;font-size:12px;border-radius:8px;border:2px solid #7c3aed;box-shadow:0 8px 32px rgba(0,0,0,0.3)';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    showToast('Copy the prompt, then open claude.ai/design');
+    ta.addEventListener('blur', () => ta.remove());
+  });
 }
 
 // ─── YOUTUBE MINER ───────────────────────────────────────────────
