@@ -342,6 +342,7 @@ app.post('/api/ideas/generate', async (req, res) => {
     return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
   }
 
+  const ideaCount = Math.min(Math.max(parseInt(req.body.count) || 8, 1), 20);
   const apifyKey = process.env.APIFY_API_KEY;
   const pillarsContent = CLIENT_CONTEXT_DIR ? readMD(path.join(CLIENT_CONTEXT_DIR, 'content-pillars.md')) : null;
   const icpContent     = CLIENT_CONTEXT_DIR ? readMD(path.join(CLIENT_CONTEXT_DIR, 'icp.md')) : null;
@@ -518,13 +519,13 @@ app.post('/api/ideas/generate', async (req, res) => {
 
   const systemPrompt = `You are a LinkedIn content strategist for Luca Carrese, founder of ColdIQ — B2B outbound sales agency at $7M ARR.\n${pillarsContent ? `\n## CONTENT PILLARS\n${pillarsContent}` : ''}${icpContent ? `\n## ICP\n${icpContent}` : ''}`;
 
-  const userPrompt = `Here are live signals from LinkedIn, Reddit, Google News, and Hacker News in Luca's niche right now:\n\n${signalsBlock}\n\nBased on these signals AND the content pillars, generate exactly 8 post ideas for Luca.\n\nRules:\n- Each idea needs a specific angle, not just a topic\n- Spread across all 3 content pillars (at least 2 per pillar)\n- At least 3 ideas must target Tier 1 ICP pain points directly\n- Hooks must follow Luca's voice: specific number, conclusion-first, no hedging\n\nReturn a raw JSON array of exactly 8 objects. No markdown fences, no explanation — only the JSON array.\n\nEach object must have exactly these fields:\n{\n  "hook": "The exact hook line — specific, numbered, conclusion-first",\n  "angle": "2-3 sentences on what the post covers and what makes it valuable",\n  "pillar": "GTM Systems" | "Claude Code for GTM" | "AI Agents for Sales",\n  "icpTier": "Tier 1" | "Tier 2" | "Tier 3",\n  "postType": "How-to" | "Story" | "Framework" | "Contrarian" | "Social proof" | "Lead magnet",\n  "signal": "One line on which live signal this is grounded in, or 'Content pillar — no live signal'"\n}`;
+  const userPrompt = `Here are live signals from LinkedIn, Reddit, Google News, and Hacker News in Luca's niche right now:\n\n${signalsBlock}\n\nBased on these signals AND the content pillars, generate exactly ${ideaCount} post ideas for Luca.\n\nRules:\n- Each idea needs a specific angle, not just a topic\n- Spread across all 3 content pillars\n- At least ${Math.ceil(ideaCount * 0.35)} ideas must target Tier 1 ICP pain points directly\n- Hooks must follow Luca's voice: specific number, conclusion-first, no hedging\n\nReturn a raw JSON array of exactly ${ideaCount} objects. No markdown fences, no explanation — only the JSON array.\n\nEach object must have exactly these fields:\n{\n  "hook": "The exact hook line — specific, numbered, conclusion-first",\n  "angle": "2-3 sentences on what the post covers and what makes it valuable",\n  "pillar": "GTM Systems" | "Claude Code for GTM" | "AI Agents for Sales",\n  "icpTier": "Tier 1" | "Tier 2" | "Tier 3",\n  "postType": "How-to" | "Story" | "Framework" | "Contrarian" | "Social proof" | "Lead magnet",\n  "signal": "One line on which live signal this is grounded in, or 'Content pillar — no live signal'"\n}`;
 
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 2048,
+      max_tokens: Math.max(2048, ideaCount * 300),
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }]
     });

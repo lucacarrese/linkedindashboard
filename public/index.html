@@ -743,6 +743,13 @@
       <div class="topbar">
         <div class="topbar-title">Ideas Lab</div>
         <div class="topbar-actions">
+          <select id="ideas-count-select" style="font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;border:1px solid #e0e0e0;background:white;color:#555;cursor:pointer;outline:none;">
+            <option value="5">5 ideas</option>
+            <option value="8" selected>8 ideas</option>
+            <option value="10">10 ideas</option>
+            <option value="12">12 ideas</option>
+            <option value="15">15 ideas</option>
+          </select>
           <button class="btn-gen-ideas" id="gen-ideas-btn" onclick="generateIdeas()">⚡ Generate Ideas</button>
         </div>
       </div>
@@ -1516,7 +1523,8 @@ async function generateIdeas() {
   loading.style.display = 'flex';
   section.style.display = 'none';
   try {
-    const res = await fetch('/api/ideas/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const count = parseInt(document.getElementById('ideas-count-select').value) || 8;
+    const res = await fetch('/api/ideas/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count }) });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error || 'Generation failed'); }
     const data = await res.json();
     AI_IDEAS = data.ideas || [];
