@@ -728,6 +728,394 @@ topPosts: top 3 by comments+reposts. gaps: 3 items. refreshAngles: 3 items (one 
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ─── TOOL: YOUTUBE MINER ────────────────────────────────────────
+app.post('/api/tools/youtube', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const { keyword, videoUrl } = req.body;
+  const ideasSettings = readJSON(IDEAS_SETTINGS_FILE, DEFAULT_IDEAS_SETTINGS);
+  const searchQuery = keyword || ideasSettings.keywords[0] || 'B2B outbound sales';
+  const apifyKey = process.env.APIFY_API_KEY;
+  const googleKey = process.env.GOOGLE_API_KEY;
+
+  let videos = [];
+
+  // Try YouTube Data API first
+  if (googleKey && !videoUrl) {
+    try {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+      const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&order=viewCount&publishedAfter=${thirtyDaysAgo}&maxResults=8&key=${googleKey}`;
+      const ytRes = await fetch(ytUrl);
+      const ytData = await ytRes.json();
+      if (ytData.items) {
+        videos = ytData.items.map(v => ({
+          title: v.snippet.title,
+          channel: v.snippet.channelTitle,
+          description: v.snippet.description.slice(0, 300),
+          url: `https://youtube.com/watch?v=${v.id.videoId}`,
+          published: v.snippet.publishedAt
+        }));
+      }
+    } catch { /* fallthrough */ }
+  }
+
+  // If videoUrl provided, use it directly
+  if (videoUrl) {
+    videos = [{ title: 'Provided video', url: videoUrl, channel: '', description: '' }];
+  }
+
+  const system = `${loadFoundation()}\n\n# YOUTUBE MINER SKILL\n${loadSkill('youtube-miner')}`;
+  const videoBlock = videos.length
+    ? videos.map((v, i) => `[${i+1}] "${v.title}" by ${v.channel}\nURL: ${v.url}\nDescription: ${v.description}`).join('\n\n')
+    : `No live videos fetched. Generate ideas based on what would likely be trending for query: "${searchQuery}"`;
+
+  const userPrompt = `Run the YouTube Miner skill for this niche.
+
+Search query: ${searchQuery}
+${videoUrl ? `Specific video URL: ${videoUrl}` : ''}
+
+Videos found:
+${videoBlock}
+
+Return ONLY a raw JSON object (no markdown fences):
+{
+  "ideas": [
+    {
+      "hook": "specific hook line",
+      "angle": "2-3 sentences on the post angle",
+      "pillar": "GTM Systems|Claude Code for GTM|AI Agents for Sales",
+      "icpTier": "Tier 1|Tier 2|Tier 3",
+      "postType": "How-to|Story|Framework|Contrarian|Social proof",
+      "sourceVideo": "video title or 'No live video'"
+    }
+  ],
+  "frameworks": ["framework 1 extracted", "framework 2", "framework 3"]
+}
+ideas: 4-5 items. frameworks: 3 reusable structural insights from the videos.`;
+
+  try {
+    const result = await claudeJSON(system, userPrompt, 2500);
+    res.json({ ...result, videosAnalyzed: videos.length, searchQuery });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── TOOL: REAL-TIME SIGNAL (Strategist) ────────────────────────
+app.post('/api/tools/realtimesignal', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const apifyKey = process.env.APIFY_API_KEY;
+  const ideasSettings = readJSON(IDEAS_SETTINGS_FILE, DEFAULT_IDEAS_SETTINGS);
+  const keyword = req.body.keyword || ideasSettings.keywords[0] || 'B2B outbound sales';
+
+  let linkedinPosts = [], redditPosts = [];
+  const tenDaysAgo = Date.now() - 10 * 86400000;
+
+  if (apifyKey) {
+    try {
+      const r = await fetch(
+        `https://api.apify.com/v2/acts/datadoping~linkedin-posts-search-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=45`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: [keyword], maxResults: 15 }) }
+      );
+      const data = await r.json().catch(() => []);
+      if (Array.isArray(data)) {
+        linkedinPosts = data
+          .map(p => ({ text: (p.text || '').slice(0, 400), comments: p.commentsCount || 0, reposts: p.repostsCount || 0, author: p.author?.name || '' }))
+          .filter(p => p.text.length > 50)
+          .sort((a,b) => (b.comments + b.reposts) - (a.comments + a.reposts))
+          .slice(0, 8);
+      }
+    } catch {}
+  }
+
+  try {
+    const r = await fetch(`https://www.reddit.com/r/sales+SaaS+Entrepreneur/top.json?limit=8&t=week`, { headers: { 'User-Agent': 'ContentResearchBot/1.0' } });
+    const data = await r.ok ? r.json() : null;
+    if (data?.data?.children) {
+      redditPosts = data.data.children
+        .filter(p => new Date(p.data.created_utc * 1000).getTime() >= tenDaysAgo)
+        .slice(0, 5)
+        .map(p => ({ text: p.data.title, sub: p.data.subreddit, score: p.data.score }));
+    }
+  } catch {}
+
+  const system = `${loadFoundation()}\n\n# REAL-TIME SIGNAL SKILL\n${loadSkill('real-time-signal')}`;
+  const linkedinBlock = linkedinPosts.map((p,i) => `[LI${i+1}] (${p.comments}c ${p.reposts}r) ${p.text}`).join('\n\n');
+  const redditBlock = redditPosts.map((p,i) => `[R${i+1}] r/${p.sub}: ${p.text}`).join('\n\n');
+
+  const userPrompt = `Run the Real-Time Signal skill. Find 2-3 live debates worth a POV post.
+
+KEYWORD: ${keyword}
+
+LINKEDIN SIGNALS:
+${linkedinBlock || 'None fetched'}
+
+REDDIT SIGNALS:
+${redditBlock || 'None fetched'}
+
+Return ONLY a raw JSON object (no markdown fences):
+{
+  "signals": [
+    {
+      "debate": "what is being debated in 1-2 sentences",
+      "sidePro": "one side of the debate",
+      "sideCon": "opposing side",
+      "pov": "the POV angle Luca should take — grounded in his content pillars",
+      "hookSuggestion": "a specific hook line for a post on this",
+      "source": "LinkedIn|Reddit|Both"
+    }
+  ]
+}
+signals: 2-3 items.`;
+
+  try {
+    const result = await claudeJSON(system, userPrompt, 2000);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── TOOL: COPY DEVELOPER (Write Full Post) ──────────────────────
+app.post('/api/tools/write', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const { hook, angle, postType = 'How-to', icpTier = 'Tier 1', scraped = '' } = req.body;
+  if (!hook && !angle) return res.status(400).json({ error: 'hook or angle required' });
+
+  const copyDev = loadSkill('copy-developer');
+  const formatting = readMD(path.join(CLIENT_CONTEXT_DIR || '', 'formatting-profile.md')) || '';
+  const system = `${loadFoundation()}${formatting ? `\n\n# FORMATTING PROFILE\n${formatting}` : ''}\n\n# COPY DEVELOPER SKILL\n${copyDev}`;
+
+  const userPrompt = `Write a full LinkedIn post using the Copy Developer skill.
+
+Hook: ${hook || '(derive from angle)'}
+Angle: ${angle || '(derive from hook)'}
+Post Type: ${postType}
+ICP Tier: ${icpTier}
+${scraped ? `Reference Material:\n${scraped.slice(0, 1000)}` : ''}
+
+Rules:
+- Apply the full voice profile — rhythm, banned vocab, no em dashes, no "here's the thing"
+- Match the post type structure exactly
+- End with a specific, earned CTA (not bolted on)
+- No markdown in the post text itself
+
+Return ONLY a raw JSON object (no markdown fences):
+{
+  "post": "the full post text, line breaks as \\n",
+  "altHooks": ["alternative hook 1", "alternative hook 2"],
+  "notes": "one sentence on the structural choice made"
+}`;
+
+  try {
+    const result = await claudeJSON(system, userPrompt, 2500);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── TOOL: FOUNDATION REFRESH PING ──────────────────────────────
+app.get('/api/tools/ping', (req, res) => {
+  if (!CLIENT_CONTEXT_DIR) return res.json({ files: [], warning: 'CLIENT_CONTEXT_DIR not set' });
+  const files = ['voice-profile.md', 'icp.md', 'content-pillars.md'];
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+  const results = files.map(f => {
+    const fp = path.join(CLIENT_CONTEXT_DIR, f);
+    try {
+      const stat = fs.statSync(fp);
+      const age = Date.now() - stat.mtimeMs;
+      const ageDays = Math.floor(age / 86400000);
+      return { file: f, lastModified: stat.mtime.toISOString(), ageDays, needsRefresh: age > thirtyDays };
+    } catch { return { file: f, lastModified: null, ageDays: null, needsRefresh: true, missing: true }; }
+  });
+  res.json({ files: results, checkedAt: new Date().toISOString() });
+});
+
+// ─── TOOL: FEEDBACK CAPTURE ──────────────────────────────────────
+const LEARNING_LOG_FILE = path.join(__dirname, 'data', 'learning-log.json');
+app.get('/api/tools/feedback', (req, res) => res.json(readJSON(LEARNING_LOG_FILE, [])));
+app.post('/api/tools/feedback', (req, res) => {
+  const { produced, changed, rejected, gradeScore, gradeVerdict, engagementNote, tags } = req.body;
+  const log = readJSON(LEARNING_LOG_FILE, []);
+  log.unshift({ id: String(Date.now()), date: new Date().toISOString(), produced, changed, rejected, gradeScore, gradeVerdict, engagementNote, tags: tags || [] });
+  writeJSON(LEARNING_LOG_FILE, log);
+  res.json({ ok: true });
+});
+
+// ─── TOOL: CONTENT AUDITOR ───────────────────────────────────────
+app.post('/api/tools/audit', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const posts = readJSON(POSTS_FILE, []).slice(0, 50);
+  const learningLog = readJSON(LEARNING_LOG_FILE, []).slice(0, 20);
+  const system = `${loadFoundation()}\n\n# CONTENT AUDITOR SKILL\n${loadSkill('content-auditor')}`;
+  const postsBlock = posts.map((p, i) => `[${i+1}] ${p.status} | ${p.tags?.join(', ') || 'no tags'} | ${(p.body || p.title || '').slice(0, 200)}`).join('\n');
+  const userPrompt = `Run a Content Audit on this client's post history.
+
+POSTS (${posts.length} total):
+${postsBlock || 'No posts yet'}
+
+LEARNING LOG (${learningLog.length} entries):
+${learningLog.slice(0, 5).map(e => `${e.date?.slice(0,10)}: ${e.produced || ''} | Grade: ${e.gradeVerdict || '?'}`).join('\n') || 'None'}
+
+Return ONLY a raw JSON object:
+{
+  "pillarCoverage": { "GTM Systems": N, "Claude Code for GTM": N, "AI Agents for Sales": N },
+  "voiceFreshness": "Fresh|Needs review|Stale",
+  "topIssues": ["issue 1", "issue 2", "issue 3"],
+  "recommendations": [
+    { "priority": "High|Medium|Low", "action": "specific action", "reason": "why" }
+  ],
+  "summary": "2-sentence summary"
+}`;
+  try {
+    const result = await claudeJSON(system, userPrompt, 2000);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── TOOL: VOICE ANALYZER ────────────────────────────────────────
+app.post('/api/tools/voiceanalyze', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const { posts: inputPosts } = req.body;
+  if (!inputPosts) return res.status(400).json({ error: 'posts required' });
+  const system = `${loadFoundation()}\n\n# VOICE ANALYZER SKILL\n${loadSkill('voice-analyzer')}`;
+  const userPrompt = `Analyze the voice in these posts and identify patterns, rules, and drift from the existing voice profile.
+
+POSTS:
+${inputPosts.slice(0, 3000)}
+
+Return ONLY a raw JSON object:
+{
+  "patterns": ["pattern 1", "pattern 2", "pattern 3"],
+  "driftWarnings": ["any areas drifting from voice profile"],
+  "suggestedRules": ["new rule to add", "..."],
+  "bannedVocabFound": ["any banned words found"],
+  "voiceScore": N,
+  "summary": "2-sentence voice health summary"
+}`;
+  try {
+    const result = await claudeJSON(system, userPrompt, 2000);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── TOOL: ICP ANALYZER ──────────────────────────────────────────
+app.post('/api/tools/icpanalyze', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const { answers } = req.body;
+  if (!answers) return res.status(400).json({ error: 'answers required' });
+  const system = `${loadFoundation()}\n\n# ICP ANALYZER SKILL\n${loadSkill('icp-analyzer')}`;
+  const userPrompt = `Build an ICP document from these inputs.
+
+INPUT:
+${answers.slice(0, 3000)}
+
+Return ONLY a raw JSON object:
+{
+  "demographics": { "title": "...", "companySize": "...", "industry": "...", "revenue": "..." },
+  "psychographics": ["belief 1", "belief 2", "belief 3"],
+  "languageMap": { "painPhrases": ["..."], "desirePhrases": ["..."] },
+  "buyingTriggers": ["trigger 1", "trigger 2"],
+  "contentTriggers": ["what makes them stop scrolling", "..."],
+  "disqualifiers": ["who is NOT the ICP"],
+  "summary": "2-sentence ICP summary"
+}`;
+  try {
+    const result = await claudeJSON(system, userPrompt, 2000);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── TOOL: FORMATTING PROFILE ────────────────────────────────────
+app.post('/api/tools/formattingprofile', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const { answers } = req.body;
+  if (!answers) return res.status(400).json({ error: 'answers required' });
+  const system = `${loadFoundation()}\n\n# FORMATTING PROFILE SKILL\n${loadSkill('formatting-profile')}`;
+  const userPrompt = `Build a formatting profile from these inputs.
+
+INPUT:
+${answers.slice(0, 3000)}
+
+Return ONLY a raw JSON object:
+{
+  "lineBreaks": "rule for line breaks",
+  "sentenceLength": "short/medium/mixed — specific rule",
+  "punctuation": "specific rules",
+  "emphasis": "bold/caps/none — when used",
+  "postLength": "target length rule",
+  "structure": "preferred structure types",
+  "emoji": "emoji usage rule",
+  "summary": "1-sentence formatting signature"
+}`;
+  try {
+    const result = await claudeJSON(system, userPrompt, 1500);
+    res.json(result);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ─── TOOL: WEEKLY IDEA SESSION ───────────────────────────────────
+app.post('/api/tools/weekly', async (req, res) => {
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(400).json({ error: 'ANTHROPIC_API_KEY not set.' });
+  const apifyKey = process.env.APIFY_API_KEY;
+  const ideasSettings = readJSON(IDEAS_SETTINGS_FILE, DEFAULT_IDEAS_SETTINGS);
+  const keywords = ideasSettings.keywords.length ? ideasSettings.keywords : DEFAULT_IDEAS_SETTINGS.keywords;
+  const { ideasPerWeek = 6 } = req.body;
+
+  // Run LinkedIn + Reddit research in parallel (same as ideas/generate)
+  const tenDaysAgo = Date.now() - 10 * 86400000;
+  const tenDaysAgoSec = Math.floor(tenDaysAgo / 1000);
+  let signals = [];
+
+  const [liResults, redditResults, hnResults] = await Promise.allSettled([
+    apifyKey ? fetch(
+      `https://api.apify.com/v2/acts/datadoping~linkedin-posts-search-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=45`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: keywords.slice(0,2), maxResults: 10 }) }
+    ).then(r => r.json()).catch(() => []) : Promise.resolve([]),
+    Promise.allSettled(['sales','SaaS','Entrepreneur'].map(sub =>
+      fetch(`https://www.reddit.com/r/${sub}/top.json?limit=5&t=week`, { headers: { 'User-Agent': 'ContentResearchBot/1.0' } }).then(r => r.ok ? r.json() : null).catch(() => null)
+    )),
+    fetch(`https://hn.algolia.com/api/v1/search?tags=story&query=${encodeURIComponent(keywords[0])}&numericFilters=created_at_i>${tenDaysAgoSec}&hitsPerPage=5`).then(r => r.ok ? r.json() : null).catch(() => null)
+  ]);
+
+  if (liResults.status === 'fulfilled' && Array.isArray(liResults.value)) {
+    signals.push(...liResults.value.slice(0,8).map(p => ({ source:'LinkedIn', text:(p.text||'').slice(0,300) })).filter(s=>s.text.length>30));
+  }
+  if (redditResults.status === 'fulfilled') {
+    const rPosts = redditResults.value.filter(r=>r.status==='fulfilled'&&r.value?.data?.children?.length).flatMap(r=>r.value.data.children).slice(0,6);
+    signals.push(...rPosts.map(p=>({ source:'Reddit', text: p.data.title })));
+  }
+  if (hnResults.status === 'fulfilled' && hnResults.value?.hits) {
+    signals.push(...hnResults.value.hits.slice(0,4).map(h=>({ source:'HN', text: h.title||'' })).filter(s=>s.text.length>20));
+  }
+
+  const system = `${loadFoundation()}\n\n# WEEKLY IDEA SESSION SKILL\n${loadSkill('weekly-idea-session')}`;
+  const signalBlock = signals.map((s,i) => `[${i+1}][${s.source}] ${s.text}`).join('\n');
+  const userPrompt = `Run a Weekly Idea Session. Generate ${ideasPerWeek} post ideas for this week.
+
+LIVE SIGNALS:
+${signalBlock || 'No signals fetched — use content pillars only'}
+
+Return ONLY a raw JSON object:
+{
+  "weeklyBatch": [
+    {
+      "hook": "specific hook",
+      "angle": "2-sentence angle",
+      "pillar": "GTM Systems|Claude Code for GTM|AI Agents for Sales",
+      "icpTier": "Tier 1|Tier 2|Tier 3",
+      "postType": "How-to|Story|Framework|Contrarian|Social proof|Lead magnet",
+      "category": "Evergreen|Research-based",
+      "recommendedDay": "Monday|Tuesday|Wednesday|Thursday|Friday",
+      "signal": "source signal or content pillar"
+    }
+  ],
+  "coverageCheck": {
+    "tier1Count": N, "tier2Count": N, "evergreenCount": N, "researchCount": N
+  }
+}
+weeklyBatch: exactly ${ideasPerWeek} items.`;
+
+  try {
+    const result = await claudeJSON(system, userPrompt, Math.max(2500, ideasPerWeek * 400));
+    res.json({ ...result, signalsUsed: signals.length });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // ─── LINKEDIN STRATEGIST ────────────────────────────────────────
 app.get('/api/strategist', (req, res) => res.json(readJSON(STRATEGIST_FILE)));
 
