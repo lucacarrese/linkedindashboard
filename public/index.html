@@ -341,6 +341,16 @@
     }
     .btn-rs-save:hover { background: #333; }
     .rs-saved-msg { font-size: 11px; color: #16a34a; text-align: center; margin-top: 6px; display: none; }
+    .rs-sources { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+    .rs-source-toggle {
+      display: flex; align-items: center; gap: 6px; padding: 5px 10px;
+      border-radius: 20px; border: 1px solid #e0e0e0; cursor: pointer;
+      font-size: 12px; font-weight: 600; color: #555; background: white;
+      transition: all 0.12s; user-select: none;
+    }
+    .rs-source-toggle.active { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .rs-source-toggle .rs-dot { width: 7px; height: 7px; border-radius: 50%; background: #d1d5db; }
+    .rs-source-toggle.active .rs-dot { background: #16a34a; }
 
     /* ─── SKILLS ─────────────────────────────────────────── */
     .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
@@ -747,6 +757,9 @@
             <span class="research-settings-toggle" id="rs-toggle">▼</span>
           </div>
           <div class="research-settings-body" id="rs-body">
+            <div class="rs-section-title">Active Sources</div>
+            <div class="rs-sources" id="rs-sources-list"></div>
+
             <div class="rs-section-title">Search Keywords</div>
             <div class="rs-list" id="rs-keywords-list"></div>
             <button class="btn-rs-add" onclick="rsAddKeyword()">+ Add keyword</button>
@@ -763,7 +776,7 @@
         <!-- Loading -->
         <div id="ai-ideas-loading" style="display:none" class="ai-loading">
           <div class="ai-loading-spinner"></div>
-          <div class="ai-loading-text">Scanning LinkedIn for live signals across your content pillars...</div>
+          <div class="ai-loading-text">Scanning LinkedIn, Reddit, Google News and Hacker News for live signals...</div>
         </div>
 
         <!-- AI-generated ideas -->
@@ -1401,12 +1414,19 @@ async function convertIdeaToPost(id) {
 }
 
 // ─── RESEARCH SETTINGS ──────────────────────────────────────────
-let RS_SETTINGS = { keywords: [], profiles: [] };
+const SOURCE_LABELS = {
+  linkedin:        'LinkedIn Search',
+  linkedinProfiles:'LinkedIn Profiles',
+  reddit:          'Reddit',
+  googleNews:      'Google News',
+  hackerNews:      'Hacker News'
+};
+let RS_SETTINGS = { keywords: [], profiles: [], sources: { linkedin: true, linkedinProfiles: true, reddit: true, googleNews: true, hackerNews: true } };
 
 async function loadResearchSettings() {
   try {
     const data = await api('GET', '/api/ideas/settings');
-    RS_SETTINGS = data;
+    RS_SETTINGS = { ...RS_SETTINGS, ...data, sources: { ...RS_SETTINGS.sources, ...(data.sources || {}) } };
     renderRSLists();
   } catch {}
 }
@@ -1414,6 +1434,7 @@ async function loadResearchSettings() {
 function renderRSLists() {
   const kList = document.getElementById('rs-keywords-list');
   const pList = document.getElementById('rs-profiles-list');
+  const sList = document.getElementById('rs-sources-list');
   if (!kList || !pList) return;
   kList.innerHTML = RS_SETTINGS.keywords.map((k, i) => `
     <div class="rs-item">
@@ -1425,6 +1446,17 @@ function renderRSLists() {
       <input type="text" value="${esc(p)}" oninput="RS_SETTINGS.profiles[${i}]=this.value" placeholder="https://www.linkedin.com/in/username/" />
       <button class="btn-rs-remove" onclick="rsRemoveProfile(${i})">×</button>
     </div>`).join('');
+  if (sList) {
+    sList.innerHTML = Object.entries(SOURCE_LABELS).map(([key, label]) => {
+      const on = RS_SETTINGS.sources[key] !== false;
+      return `<div class="rs-source-toggle ${on ? 'active' : ''}" onclick="rsToggleSource('${key}')"><span class="rs-dot"></span>${label}</div>`;
+    }).join('');
+  }
+}
+
+function rsToggleSource(key) {
+  RS_SETTINGS.sources[key] = !RS_SETTINGS.sources[key];
+  renderRSLists();
 }
 
 function rsAddKeyword() {
@@ -1454,7 +1486,8 @@ function rsRemoveProfile(i) {
 async function saveResearchSettings() {
   const settings = {
     keywords: RS_SETTINGS.keywords.filter(k => k.trim()),
-    profiles: RS_SETTINGS.profiles.filter(p => p.trim())
+    profiles: RS_SETTINGS.profiles.filter(p => p.trim()),
+    sources: RS_SETTINGS.sources
   };
   await api('POST', '/api/ideas/settings', settings);
   RS_SETTINGS = settings;
@@ -1514,7 +1547,7 @@ function renderAIIdeas(signalCount) {
   const section = document.getElementById('ai-ideas-section');
   const grid    = document.getElementById('ai-ideas-grid');
   document.getElementById('ai-ideas-count').textContent = AI_IDEAS.length + ' ideas';
-  document.getElementById('ai-ideas-meta').textContent  = signalCount > 0 ? `Based on ${signalCount} live signals (LinkedIn + Reddit)` : 'Based on content pillars';
+  document.getElementById('ai-ideas-meta').textContent  = signalCount > 0 ? `Based on ${signalCount} live signals` : 'Based on content pillars';
   if (!AI_IDEAS.length) { section.style.display = 'none'; return; }
   grid.innerHTML = AI_IDEAS.map((idea, i) => `
     <div class="ai-idea-card" id="ai-card-${i}">

@@ -24,7 +24,14 @@ const DEFAULT_IDEAS_SETTINGS = {
     'Claude Code GTM automation sales workflow',
     'AI agents outbound sales pipeline'
   ],
-  profiles: []
+  profiles: [],
+  sources: {
+    linkedin: true,
+    linkedinProfiles: true,
+    reddit: true,
+    googleNews: true,
+    hackerNews: true
+  }
 };
 
 app.use(express.json({ limit: '10mb' }));
@@ -318,10 +325,11 @@ app.get('/api/ideas/settings', (req, res) => {
 });
 
 app.post('/api/ideas/settings', (req, res) => {
-  const { keywords, profiles } = req.body;
+  const { keywords, profiles, sources } = req.body;
   const settings = {
     keywords: Array.isArray(keywords) ? keywords.filter(k => k.trim()) : DEFAULT_IDEAS_SETTINGS.keywords,
-    profiles: Array.isArray(profiles) ? profiles.filter(p => p.trim()) : []
+    profiles: Array.isArray(profiles) ? profiles.filter(p => p.trim()) : [],
+    sources: { ...DEFAULT_IDEAS_SETTINGS.sources, ...(sources || {}) }
   };
   writeJSON(IDEAS_SETTINGS_FILE, settings);
   res.json({ ok: true });
@@ -340,10 +348,11 @@ app.post('/api/ideas/generate', async (req, res) => {
   const ideasSettings = readJSON(IDEAS_SETTINGS_FILE, DEFAULT_IDEAS_SETTINGS);
   const searchKeywords = ideasSettings.keywords.length ? ideasSettings.keywords : DEFAULT_IDEAS_SETTINGS.keywords;
   const profileUrls    = ideasSettings.profiles || [];
+  const sources        = { ...DEFAULT_IDEAS_SETTINGS.sources, ...(ideasSettings.sources || {}) };
 
   // ── Source 1: LinkedIn keyword search via Apify ──
   let linkedinSignals = [];
-  if (apifyKey) {
+  if (apifyKey && sources.linkedin) {
     const apifyResults = await Promise.allSettled(
       searchKeywords.map(kw =>
         fetch(
@@ -366,7 +375,7 @@ app.post('/api/ideas/generate', async (req, res) => {
 
   // ── Source 1b: LinkedIn profile posts via Apify ──
   let profileSignals = [];
-  if (apifyKey && profileUrls.length) {
+  if (apifyKey && sources.linkedinProfiles && profileUrls.length) {
     try {
       const profileRes = await fetch(
         `https://api.apify.com/v2/acts/datadoping~linkedin-profile-posts-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=60`,
@@ -386,28 +395,79 @@ app.post('/api/ideas/generate', async (req, res) => {
     } catch { /* profile scrape optional */ }
   }
 
-  // ── Source 2: Reddit (ICP pain language from relevant subreddits) ──
+  // ── Source 2: Reddit ──
   let redditSignals = [];
-  const redditSubs = ['sales', 'SaaS', 'Entrepreneur', 'startups'];
-  const redditResults = await Promise.allSettled(
-    redditSubs.map(sub =>
-      fetch(`https://www.reddit.com/r/${sub}/top.json?limit=5&t=week`, {
-        headers: { 'User-Agent': 'ContentResearchBot/1.0' }
-      }).then(r => r.ok ? r.json() : null).catch(() => null)
-    )
-  );
-  redditSignals = redditResults
-    .filter(r => r.status === 'fulfilled' && r.value?.data?.children?.length)
-    .flatMap(r => r.value.data.children)
-    .map(p => ({
-      source: 'Reddit',
-      text: `${p.data.title}${p.data.selftext ? ' — ' + p.data.selftext.slice(0, 200) : ''}`.replace(/\n+/g, ' '),
-      author: `r/${p.data.subreddit}`
-    }))
-    .filter(s => s.text.length > 20)
-    .slice(0, 8);
+  if (sources.reddit) {
+    const redditSubs = ['sales', 'SaaS', 'Entrepreneur', 'startups'];
+    const redditResults = await Promise.allSettled(
+      redditSubs.map(sub =>
+        fetch(`https://www.reddit.com/r/${sub}/top.json?limit=5&t=week`, {
+          headers: { 'User-Agent': 'ContentResearchBot/1.0' }
+        }).then(r => r.ok ? r.json() : null).catch(() => null)
+      )
+    );
+    redditSignals = redditResults
+      .filter(r => r.status === 'fulfilled' && r.value?.data?.children?.length)
+      .flatMap(r => r.value.data.children)
+      .map(p => ({
+        source: 'Reddit',
+        text: `${p.data.title}${p.data.selftext ? ' — ' + p.data.selftext.slice(0, 200) : ''}`.replace(/\n+/g, ' '),
+        author: `r/${p.data.subreddit}`
+      }))
+      .filter(s => s.text.length > 20)
+      .slice(0, 8);
+  }
 
-  const allSignals = [...linkedinSignals, ...profileSignals, ...redditSignals];
+  // ── Source 3: Google News RSS ──
+  let googleNewsSignals = [];
+  if (sources.googleNews) {
+    const gnKeywords = searchKeywords.slice(0, 2);
+    const gnResults = await Promise.allSettled(
+      gnKeywords.map(kw => {
+        const q = encodeURIComponent(kw);
+        return fetch(`https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`, {
+          headers: { 'User-Agent': 'ContentResearchBot/1.0' }
+        }).then(r => r.ok ? r.text() : null).catch(() => null);
+      })
+    );
+    googleNewsSignals = gnResults
+      .filter(r => r.status === 'fulfilled' && r.value)
+      .flatMap(r => {
+        const items = r.value.match(/<item>([\s\S]*?)<\/item>/g) || [];
+        return items.slice(0, 4).map(item => {
+          const title = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1] || '';
+          const clean = title.replace(/ - [^-]+$/, '').trim();
+          return { source: 'Google News', text: clean, author: '' };
+        }).filter(s => s.text.length > 20);
+      })
+      .slice(0, 6);
+  }
+
+  // ── Source 4: Hacker News ──
+  let hnSignals = [];
+  if (sources.hackerNews) {
+    const sevenDaysAgo = Math.floor(Date.now() / 1000) - 7 * 86400;
+    const hnKeywords = ['B2B outbound sales', 'AI sales automation', 'GTM strategy'];
+    const hnResults = await Promise.allSettled(
+      hnKeywords.map(kw => {
+        const q = encodeURIComponent(kw);
+        return fetch(`https://hn.algolia.com/api/v1/search?tags=story&query=${q}&numericFilters=created_at_i>${sevenDaysAgo}&hitsPerPage=5`)
+          .then(r => r.ok ? r.json() : null).catch(() => null);
+      })
+    );
+    hnSignals = hnResults
+      .filter(r => r.status === 'fulfilled' && r.value?.hits?.length)
+      .flatMap(r => r.value.hits)
+      .map(h => ({
+        source: 'Hacker News',
+        text: h.title || '',
+        author: `${h.points || 0} pts`
+      }))
+      .filter(s => s.text.length > 20)
+      .slice(0, 5);
+  }
+
+  const allSignals = [...linkedinSignals, ...profileSignals, ...redditSignals, ...googleNewsSignals, ...hnSignals];
 
   const signalsBlock = allSignals.length > 0
     ? allSignals.map((s, i) => `[${i + 1}] [${s.source}]${s.author ? ` (${s.author})` : ''} ${s.text}`).join('\n\n')
@@ -415,7 +475,7 @@ app.post('/api/ideas/generate', async (req, res) => {
 
   const systemPrompt = `You are a LinkedIn content strategist for Luca Carrese, founder of ColdIQ — B2B outbound sales agency at $7M ARR.\n${pillarsContent ? `\n## CONTENT PILLARS\n${pillarsContent}` : ''}${icpContent ? `\n## ICP\n${icpContent}` : ''}`;
 
-  const userPrompt = `Here are live signals from LinkedIn and Reddit in Luca's niche right now:\n\n${signalsBlock}\n\nBased on these signals AND the content pillars, generate exactly 8 post ideas for Luca.\n\nRules:\n- Each idea needs a specific angle, not just a topic\n- Spread across all 3 content pillars (at least 2 per pillar)\n- At least 3 ideas must target Tier 1 ICP pain points directly\n- Hooks must follow Luca's voice: specific number, conclusion-first, no hedging\n\nReturn a raw JSON array of exactly 8 objects. No markdown fences, no explanation — only the JSON array.\n\nEach object must have exactly these fields:\n{\n  "hook": "The exact hook line — specific, numbered, conclusion-first",\n  "angle": "2-3 sentences on what the post covers and what makes it valuable",\n  "pillar": "GTM Systems" | "Claude Code for GTM" | "AI Agents for Sales",\n  "icpTier": "Tier 1" | "Tier 2" | "Tier 3",\n  "postType": "How-to" | "Story" | "Framework" | "Contrarian" | "Social proof" | "Lead magnet",\n  "signal": "One line on which live signal this is grounded in, or 'Content pillar — no live signal'"\n}`;
+  const userPrompt = `Here are live signals from LinkedIn, Reddit, Google News, and Hacker News in Luca's niche right now:\n\n${signalsBlock}\n\nBased on these signals AND the content pillars, generate exactly 8 post ideas for Luca.\n\nRules:\n- Each idea needs a specific angle, not just a topic\n- Spread across all 3 content pillars (at least 2 per pillar)\n- At least 3 ideas must target Tier 1 ICP pain points directly\n- Hooks must follow Luca's voice: specific number, conclusion-first, no hedging\n\nReturn a raw JSON array of exactly 8 objects. No markdown fences, no explanation — only the JSON array.\n\nEach object must have exactly these fields:\n{\n  "hook": "The exact hook line — specific, numbered, conclusion-first",\n  "angle": "2-3 sentences on what the post covers and what makes it valuable",\n  "pillar": "GTM Systems" | "Claude Code for GTM" | "AI Agents for Sales",\n  "icpTier": "Tier 1" | "Tier 2" | "Tier 3",\n  "postType": "How-to" | "Story" | "Framework" | "Contrarian" | "Social proof" | "Lead magnet",\n  "signal": "One line on which live signal this is grounded in, or 'Content pillar — no live signal'"\n}`;
 
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
