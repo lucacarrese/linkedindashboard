@@ -273,6 +273,13 @@
     .badge-pillar-gtm    { background: #dcfce7; color: #166534; }
     .badge-pillar-claude { background: #dbeafe; color: #1d4ed8; }
     .badge-pillar-ai     { background: #fef3e8; color: #c05621; }
+    .badge-src-linkedin  { background: #dbeafe; color: #1d4ed8; }
+    .badge-src-profile   { background: #ede9fe; color: #6d28d9; }
+    .badge-src-reddit    { background: #fff1ee; color: #b91c1c; }
+    .badge-src-hn        { background: #fff7ed; color: #c2410c; }
+    .badge-src-news      { background: #f0fdf4; color: #166534; }
+    .badge-src-twitter   { background: #f1f5f9; color: #0f172a; }
+    .badge-src-pillar    { background: #f5f5f5; color: #aaa; }
     .badge-tier-1 { background: #fce7f3; color: #be185d; }
     .badge-tier-2 { background: #f3f4f6; color: #374151; }
     .badge-tier-3 { background: #f3f4f6; color: #9ca3af; }
@@ -2049,6 +2056,18 @@ function tierClass(t) {
   return 'badge-tier-3';
 }
 
+function sourceTagClass(tag) {
+  if (!tag) return 'badge-src-pillar';
+  const t = tag.toLowerCase();
+  if (t === 'content pillar') return 'badge-src-pillar';
+  if (t.includes('reddit')) return 'badge-src-reddit';
+  if (t.includes('hacker')) return 'badge-src-hn';
+  if (t.includes('google news')) return 'badge-src-news';
+  if (t.includes('x/twitter') || t.includes('twitter')) return 'badge-src-twitter';
+  if (t.includes('linkedin search')) return 'badge-src-linkedin';
+  return 'badge-src-profile'; // LinkedIn profile (person name)
+}
+
 function renderAIIdeas(signalCount) {
   const section = document.getElementById('ai-ideas-section');
   const grid    = document.getElementById('ai-ideas-grid');
@@ -2063,8 +2082,8 @@ function renderAIIdeas(signalCount) {
         <span class="ai-badge ${pillarClass(idea.pillar)}">${esc(idea.pillar || '')}</span>
         <span class="ai-badge ${tierClass(idea.icpTier)}">${esc(idea.icpTier || '')}</span>
         <span class="ai-badge badge-posttype">${esc(idea.postType || '')}</span>
+        ${idea.sourceTag ? `<span class="ai-badge ${sourceTagClass(idea.sourceTag)}" title="${esc(idea.signal || '')}">${esc(idea.sourceTag)}</span>` : ''}
       </div>
-      ${idea.signal ? `<div class="ai-idea-signal">${esc(idea.signal)}</div>` : ''}
       <div class="ai-idea-actions">
         <button class="btn-save-ai" onclick="saveAIIdea(${i})">Save →</button>
         <button class="btn-develop" onclick="developIdea(${i})">Develop in Strategist →</button>
@@ -2080,7 +2099,7 @@ async function saveAIIdea(i) {
     id: 'idea_' + Date.now(),
     hook: idea.hook,
     body: idea.angle + (idea.signal && !idea.signal.includes('no live signal') ? `\n\nSignal: ${idea.signal}` : ''),
-    tags: [idea.pillar, idea.icpTier, idea.postType].filter(Boolean),
+    tags: [idea.pillar, idea.icpTier, idea.postType, idea.sourceTag].filter(Boolean),
     date: fmtDisplay(fmtDate(new Date()))
   };
   IDEAS.unshift(obj);

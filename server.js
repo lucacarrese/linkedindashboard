@@ -360,15 +360,16 @@ app.post('/api/ideas/generate', async (req, res) => {
         fetch(
           `https://api.apify.com/v2/acts/datadoping~linkedin-posts-search-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=45`,
           { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: [kw], maxResults: 5 }) }
-        ).then(r => r.json()).catch(() => [])
+        ).then(r => r.json().then(data => ({ kw, data })).catch(() => ({ kw, data: [] })))
       )
     );
     linkedinSignals = apifyResults
-      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value))
-      .flatMap(r => r.value)
+      .filter(r => r.status === 'fulfilled' && Array.isArray(r.value.data))
+      .flatMap(r => r.value.data.map(post => ({ post, kw: r.value.kw })))
       .slice(0, 12)
-      .map(post => ({
-        source: 'LinkedIn',
+      .map(({ post, kw }) => ({
+        source: `LinkedIn Search: ${kw.length > 40 ? kw.slice(0, 40) + '…' : kw}`,
+        sourceTag: 'LinkedIn Search',
         text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
         author: post.author?.name || post.author?.headline || ''
       }))
@@ -387,11 +388,16 @@ app.post('/api/ideas/generate', async (req, res) => {
       if (Array.isArray(profileData)) {
         profileSignals = profileData
           .slice(0, 10)
-          .map(post => ({
-            source: 'LinkedIn Profile',
-            text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
-            author: post.author?.name || post.authorName || ''
-          }))
+          .map(post => {
+            const authorName = post.author?.name || post.authorName || '';
+            const tag = authorName || 'LinkedIn Profile';
+            return {
+              source: `LinkedIn: ${tag}`,
+              sourceTag: tag,
+              text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
+              author: authorName
+            };
+          })
           .filter(s => s.text.length > 30);
       }
     } catch { /* profile scrape optional */ }
@@ -412,7 +418,8 @@ app.post('/api/ideas/generate', async (req, res) => {
       .filter(r => r.status === 'fulfilled' && r.value?.data?.children?.length)
       .flatMap(r => r.value.data.children)
       .map(p => ({
-        source: 'Reddit',
+        source: `Reddit r/${p.data.subreddit}`,
+        sourceTag: `Reddit r/${p.data.subreddit}`,
         text: `${p.data.title}${p.data.selftext ? ' — ' + p.data.selftext.slice(0, 200) : ''}`.replace(/\n+/g, ' '),
         author: `r/${p.data.subreddit}`
       }))
@@ -445,7 +452,7 @@ app.post('/api/ideas/generate', async (req, res) => {
           const published = pubDate ? new Date(pubDate).getTime() : 0;
           if (published && published < tenDaysAgo) return null;
           const clean = title.replace(/ - [^-]+$/, '').trim();
-          return { source: 'Google News', text: clean, author: '' };
+          return { source: 'Google News', sourceTag: 'Google News', text: clean, author: '' };
         }).filter(s => s && s.text.length > 20);
       })
       .slice(0, 6);
@@ -468,6 +475,7 @@ app.post('/api/ideas/generate', async (req, res) => {
       .flatMap(r => r.value.hits)
       .map(h => ({
         source: 'Hacker News',
+        sourceTag: 'Hacker News',
         text: h.title || '',
         author: `${h.points || 0} pts`
       }))
@@ -503,6 +511,7 @@ app.post('/api/ideas/generate', async (req, res) => {
           .slice(0, 8)
           .map(t => ({
             source: 'X/Twitter',
+            sourceTag: 'X/Twitter',
             text: (t.text || t.full_text || t.tweet?.text || '').slice(0, 300).replace(/\n+/g, ' '),
             author: t.author?.userName || t.user?.screen_name || t.authorName || ''
           }))
@@ -514,12 +523,12 @@ app.post('/api/ideas/generate', async (req, res) => {
   const allSignals = [...linkedinSignals, ...profileSignals, ...redditSignals, ...googleNewsSignals, ...hnSignals, ...twitterSignals];
 
   const signalsBlock = allSignals.length > 0
-    ? allSignals.map((s, i) => `[${i + 1}] [${s.source}]${s.author ? ` (${s.author})` : ''} ${s.text}`).join('\n\n')
+    ? allSignals.map((s, i) => `[${i + 1}] SOURCE:${s.sourceTag || s.source}${s.author ? ` (${s.author})` : ''} ${s.text}`).join('\n\n')
     : 'No live signals available — base ideas purely on content pillars.';
 
   const systemPrompt = `You are a LinkedIn content strategist for Luca Carrese, founder of ColdIQ — B2B outbound sales agency at $7M ARR.\n${pillarsContent ? `\n## CONTENT PILLARS\n${pillarsContent}` : ''}${icpContent ? `\n## ICP\n${icpContent}` : ''}`;
 
-  const userPrompt = `Here are live signals from LinkedIn, Reddit, Google News, and Hacker News in Luca's niche right now:\n\n${signalsBlock}\n\nBased on these signals AND the content pillars, generate exactly ${ideaCount} post ideas for Luca.\n\nRules:\n- Each idea needs a specific angle, not just a topic\n- Spread across all 3 content pillars\n- At least ${Math.ceil(ideaCount * 0.35)} ideas must target Tier 1 ICP pain points directly\n- Hooks must follow Luca's voice: specific number, conclusion-first, no hedging\n\nReturn a raw JSON array of exactly ${ideaCount} objects. No markdown fences, no explanation — only the JSON array.\n\nEach object must have exactly these fields:\n{\n  "hook": "The exact hook line — specific, numbered, conclusion-first",\n  "angle": "2-3 sentences on what the post covers and what makes it valuable",\n  "pillar": "GTM Systems" | "Claude Code for GTM" | "AI Agents for Sales",\n  "icpTier": "Tier 1" | "Tier 2" | "Tier 3",\n  "postType": "How-to" | "Story" | "Framework" | "Contrarian" | "Social proof" | "Lead magnet",\n  "signal": "One line on which live signal this is grounded in, or 'Content pillar — no live signal'"\n}`;
+  const userPrompt = `Here are live signals from LinkedIn, Reddit, Google News, and Hacker News in Luca's niche right now:\n\n${signalsBlock}\n\nBased on these signals AND the content pillars, generate exactly ${ideaCount} post ideas for Luca.\n\nRules:\n- Each idea needs a specific angle, not just a topic\n- Spread across all 3 content pillars\n- At least ${Math.ceil(ideaCount * 0.35)} ideas must target Tier 1 ICP pain points directly\n- Hooks must follow Luca's voice: specific number, conclusion-first, no hedging\n\nReturn a raw JSON array of exactly ${ideaCount} objects. No markdown fences, no explanation — only the JSON array.\n\nEach object must have exactly these fields:\n{\n  "hook": "The exact hook line — specific, numbered, conclusion-first",\n  "angle": "2-3 sentences on what the post covers and what makes it valuable",\n  "pillar": "GTM Systems" | "Claude Code for GTM" | "AI Agents for Sales",\n  "icpTier": "Tier 1" | "Tier 2" | "Tier 3",\n  "postType": "How-to" | "Story" | "Framework" | "Contrarian" | "Social proof" | "Lead magnet",\n  "signal": "One line on which live signal this is grounded in, or 'Content pillar — no live signal'",\n  "sourceTag": "Copy the exact SOURCE: label from the matching signal (e.g. 'LinkedIn Search', 'Reddit r/sales', 'Hacker News', 'Google News', 'X/Twitter', or the person name if a LinkedIn profile). Use 'Content Pillar' if no signal."\n}`;
 
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
