@@ -476,8 +476,8 @@ app.post('/api/ideas/generate', async (req, res) => {
         return items.map(item => {
           const title = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1] || '';
           const pubDate = (item.match(/<pubDate>(.*?)<\/pubDate>/))?.[1] || '';
-          const published = pubDate ? new Date(pubDate).getTime() : 0;
-          if (published && published < tenDaysAgo) return null;
+          const published = pubDate ? new Date(pubDate).getTime() : NaN;
+          if (!published || isNaN(published) || published < tenDaysAgo) return null;
           const clean = title.replace(/ - [^-]+$/, '').trim();
           return { source: 'Google News', sourceTag: 'Google News', text: clean, author: '' };
         }).filter(s => s && s.text.length > 20);
