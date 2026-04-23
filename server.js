@@ -352,50 +352,77 @@ app.post('/api/ideas/generate', async (req, res) => {
   const profileUrls    = ideasSettings.profiles || [];
   const sources        = { ...DEFAULT_IDEAS_SETTINGS.sources, ...(ideasSettings.sources || {}) };
 
-  // ── Source 1: LinkedIn keyword search via Apify ──
+  // Extract virality score from a raw Apify LinkedIn post object
+  function viralityScore(post) {
+    const reactions   = post.totalReactionCount ?? post.likeCount ?? post.likes ?? post.reactions ?? 0;
+    const comments    = post.commentCount ?? post.comments ?? 0;
+    const reshares    = post.repostCount ?? post.numReposts ?? post.sharesCount ?? post.shares ?? 0;
+    const impressions = post.impressionCount ?? post.impressions ?? post.viewCount ?? 0;
+    return (reactions) + (comments * 2) + (reshares * 3) + Math.floor(impressions / 200);
+  }
+  function viralityLabel(post) {
+    const reactions   = post.totalReactionCount ?? post.likeCount ?? post.likes ?? post.reactions ?? 0;
+    const comments    = post.commentCount ?? post.comments ?? 0;
+    const reshares    = post.repostCount ?? post.numReposts ?? post.sharesCount ?? post.shares ?? 0;
+    const parts = [];
+    if (reactions) parts.push(`${reactions.toLocaleString()} reactions`);
+    if (comments)  parts.push(`${comments.toLocaleString()} comments`);
+    if (reshares)  parts.push(`${reshares.toLocaleString()} reshares`);
+    return parts.length ? parts.join(' · ') : '';
+  }
+
+  // ── Source 1: LinkedIn keyword search via Apify (sorted by virality) ──
   let linkedinSignals = [];
   if (apifyKey && sources.linkedin) {
     const apifyResults = await Promise.allSettled(
       searchKeywords.map(kw =>
         fetch(
           `https://api.apify.com/v2/acts/datadoping~linkedin-posts-search-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=45`,
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: [kw], maxResults: 5 }) }
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ keywords: [kw], maxResults: 15 }) }
         ).then(r => r.json().then(data => ({ kw, data })).catch(() => ({ kw, data: [] })))
       )
     );
     linkedinSignals = apifyResults
       .filter(r => r.status === 'fulfilled' && Array.isArray(r.value.data))
       .flatMap(r => r.value.data.map(post => ({ post, kw: r.value.kw })))
+      .sort((a, b) => viralityScore(b.post) - viralityScore(a.post))
       .slice(0, 12)
-      .map(({ post, kw }) => ({
-        source: `LinkedIn Search: ${kw.length > 40 ? kw.slice(0, 40) + '…' : kw}`,
-        sourceTag: 'LinkedIn Search',
-        text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
-        author: post.author?.name || post.author?.headline || ''
-      }))
+      .map(({ post, kw }) => {
+        const label = viralityLabel(post);
+        return {
+          source: `LinkedIn Search: ${kw.length > 40 ? kw.slice(0, 40) + '…' : kw}`,
+          sourceTag: 'LinkedIn Search',
+          text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
+          author: post.author?.name || post.author?.headline || '',
+          engagement: label
+        };
+      })
       .filter(s => s.text.length > 30);
   }
 
-  // ── Source 1b: LinkedIn profile posts via Apify ──
+  // ── Source 1b: LinkedIn profile posts via Apify (sorted by virality) ──
   let profileSignals = [];
   if (apifyKey && sources.linkedinProfiles && profileUrls.length) {
     try {
       const profileRes = await fetch(
         `https://api.apify.com/v2/acts/datadoping~linkedin-profile-posts-scraper/run-sync-get-dataset-items?token=${apifyKey}&timeout=60`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profiles: profileUrls, maxPosts: 5 }) }
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ profiles: profileUrls, maxPosts: 15 }) }
       );
       const profileData = await profileRes.json().catch(() => []);
       if (Array.isArray(profileData)) {
         profileSignals = profileData
+          .sort((a, b) => viralityScore(b) - viralityScore(a))
           .slice(0, 10)
           .map(post => {
             const authorName = post.author?.name || post.authorName || '';
             const tag = authorName || 'LinkedIn Profile';
+            const label = viralityLabel(post);
             return {
               source: `LinkedIn: ${tag}`,
               sourceTag: tag,
               text: (post.text || post.content || '').slice(0, 400).replace(/\n+/g, ' '),
-              author: authorName
+              author: authorName,
+              engagement: label
             };
           })
           .filter(s => s.text.length > 30);
@@ -523,7 +550,7 @@ app.post('/api/ideas/generate', async (req, res) => {
   const allSignals = [...linkedinSignals, ...profileSignals, ...redditSignals, ...googleNewsSignals, ...hnSignals, ...twitterSignals];
 
   const signalsBlock = allSignals.length > 0
-    ? allSignals.map((s, i) => `[${i + 1}] SOURCE:${s.sourceTag || s.source}${s.author ? ` (${s.author})` : ''} ${s.text}`).join('\n\n')
+    ? allSignals.map((s, i) => `[${i + 1}] SOURCE:${s.sourceTag || s.source}${s.author ? ` (${s.author})` : ''}${s.engagement ? ` [${s.engagement}]` : ''} ${s.text}`).join('\n\n')
     : 'No live signals available — base ideas purely on content pillars.';
 
   const systemPrompt = `You are a LinkedIn content strategist for Luca Carrese, founder of ColdIQ — B2B outbound sales agency at $7M ARR.\n${pillarsContent ? `\n## CONTENT PILLARS\n${pillarsContent}` : ''}${icpContent ? `\n## ICP\n${icpContent}` : ''}`;
@@ -542,6 +569,16 @@ app.post('/api/ideas/generate', async (req, res) => {
     const raw = message.content[0].text.trim();
     try { ideas = JSON.parse(raw); }
     catch { const m = raw.match(/\[[\s\S]*\]/); if (m) ideas = JSON.parse(m[0]); }
+    // attach engagement label from matching signal
+    const engagementMap = {};
+    allSignals.forEach(s => {
+      const key = s.sourceTag || s.source;
+      if (s.engagement && !engagementMap[key]) engagementMap[key] = s.engagement;
+    });
+    ideas = ideas.map(idea => ({
+      ...idea,
+      engagement: idea.sourceTag && engagementMap[idea.sourceTag] ? engagementMap[idea.sourceTag] : undefined
+    }));
     res.json({ ideas, signalCount: allSignals.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
